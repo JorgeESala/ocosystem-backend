@@ -30,8 +30,8 @@ public class MonthlyCategoryReportDTO {
     private BigDecimal waste;
 
     // Reportes desglosados
-    private Map<String, BigDecimal> salesByProduct;       // Producto → subtotal vendido
-    private Map<String, BigDecimal> quantitiesByProduct;  // Producto → cantidad vendida
+    private Map<String, BigDecimal> salesByProduct;       
+    private Map<String, BigDecimal> quantitiesByProduct; 
 
     private List<WeeklyReportDTO> weeklyReports; // Reportes semanales solo de esa categoría
 }

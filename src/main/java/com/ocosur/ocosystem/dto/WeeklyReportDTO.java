@@ -2,6 +2,7 @@ package com.ocosur.ocosystem.dto;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -13,23 +14,24 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class WeeklyReportDTO {
     private Integer branchId;
     private OffsetDateTime weekStart;
     private BigDecimal totalSales;
     private BigDecimal totalExpenses;
-    private BigDecimal profit;
+    private BigDecimal totalProfit;
     private BigDecimal totalSold;
     private BigDecimal totalBought;
     private BigDecimal gut;
     private BigDecimal waste;
-    // ventas agrupadas por categoría
+    private BigDecimal eggQuantity;
+    private BigDecimal eggCartonsQuantity;
+    private BigDecimal eggsSales;
     private Map<String, BigDecimal> salesByCategory;
-
-    // ventas agrupadas por producto
     private Map<String, BigDecimal> salesByProduct;
-
-    // opcional: gastos agrupados por categoría
     private Map<String, BigDecimal> expensesByCategory;
+    
+    private List<DailyReportDTO> dailyReports;
+    private List<ProductReportDTO> productReports;
 }

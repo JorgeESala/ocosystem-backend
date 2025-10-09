@@ -1,6 +1,7 @@
 package com.ocosur.ocosystem.dto;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -14,21 +15,25 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DailyReportDTO {
 
-    private Integer branchId;              // Sucursal
-    private String date;                   // Fecha en formato YYYY-MM-DD
+    private Integer branchId;              
+    private OffsetDateTime date;                  
 
     // Totales
-    private BigDecimal totalSales;         // Total de ventas
-    private BigDecimal totalExpenses;      // Total de gastos
-    private BigDecimal totalProfit;        // Ganancia = ventas - gastos
-    private BigDecimal totalSold;          // Cantidad vendida (kilos/piezas)
-    private BigDecimal totalBought;        // Cantidad comprada (kilos/piezas)
-    private BigDecimal gut;                // Solo si aplica (ej. tripa)
-    private BigDecimal waste;              // Solo si aplica (ej. merma)
+    private BigDecimal totalSales;         
+    private BigDecimal totalExpenses;   
+    private BigDecimal totalProfit;        
+    private BigDecimal totalSold;         
+    private BigDecimal totalBought;        
+    private BigDecimal gut;               
+    private BigDecimal waste;
+    private BigDecimal slaughteredChicken;              
+    private BigDecimal eggQuantity;
+    private BigDecimal eggCartonsQuantity;
+    private BigDecimal eggsSales;
 
     // Detalles desglosados
-    private Map<String, BigDecimal> salesByCategory;       // Categoría → subtotal vendido
-    private Map<String, BigDecimal> salesByProduct;        // Producto → subtotal vendido
-    private Map<String, BigDecimal> quantitiesByProduct;   // Producto → cantidad vendida
-    private Map<String, BigDecimal> expensesByCategory;    // Categoría de gasto → total gastado
+    private Map<String, BigDecimal> salesByCategory;       
+    private Map<String, BigDecimal> salesByProduct;      
+    private Map<String, BigDecimal> quantitiesByProduct;   
+    private Map<String, BigDecimal> expensesByCategory;    
 }

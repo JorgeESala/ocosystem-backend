@@ -2,6 +2,7 @@ package com.ocosur.ocosystem.dto;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,6 +16,6 @@ public class WeeklyCategoryReportDTO {
     private BigDecimal sales;
     private BigDecimal expenses;
     private BigDecimal profit;
-    private BigDecimal sold;   // cantidad vendida (ej. kilos, litros, unidades)
-    private BigDecimal bought; // cantidad comprada (si aplica)
+    private BigDecimal sold;   
+    private BigDecimal bought; 
 }
