@@ -3,6 +3,8 @@ package com.ocosur.ocosystem.controller;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ocosur.ocosystem.dto.DailyReportDTO;
 import com.ocosur.ocosystem.dto.MonthlyCategoryReportDTO;
 import com.ocosur.ocosystem.dto.MonthlyReportDTO;
+import com.ocosur.ocosystem.dto.ReportEntryDTO;
 import com.ocosur.ocosystem.dto.WeeklyReportDTO;
 import com.ocosur.ocosystem.service.ReportService;
 
@@ -70,6 +73,26 @@ public class ReportController {
 
         DailyReportDTO report = reportService.getDailyReport(branchId, dateTime);
         return ResponseEntity.ok(report);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ReportEntryDTO>> getReports(
+            @RequestParam Integer branchId,
+            @RequestParam String startDate, // ISO 8601 string
+            @RequestParam String endDate,   // ISO 8601 string
+            @RequestParam String frequency  // daily, weekly, monthly, yearly
+    ) {
+        try {
+            // Parsear fechas
+            OffsetDateTime start = OffsetDateTime.parse(startDate);
+            OffsetDateTime end = OffsetDateTime.parse(endDate);
+
+            List<ReportEntryDTO> reports = reportService.getReports(branchId, start, end, frequency);
+
+            return ResponseEntity.ok(reports);
+        } catch (DateTimeParseException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
 }
