@@ -17,9 +17,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
+import org.springframework.util.StopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
 import com.ocosur.ocosystem.dto.DailyReportDTO;
 import com.ocosur.ocosystem.dto.MonthlyCategoryReportDTO;
 import com.ocosur.ocosystem.dto.MonthlyReportDTO;
@@ -41,6 +42,7 @@ import lombok.RequiredArgsConstructor;
 public class ReportService {
         private final TicketRepository ticketRepository;
         private final ExpenseRepository expenseRepository;
+        private static final Logger log = LoggerFactory.getLogger(ReportService.class);
 
         private final Integer GUT_CATEGORY = 5;
         private final Integer SLAUGHTERED_CHICKEN = 6;
@@ -483,129 +485,102 @@ public class ReportService {
 
         public List<ReportEntryDTO> getReports(Integer branchId, OffsetDateTime startDate, OffsetDateTime endDate,
                         String frequency) {
+                StopWatch globalWatch = new StopWatch("Report generation");
+                globalWatch.start("Total");
 
-                // 1️⃣ Traer todos los tickets y expenses del rango completo de una sola vez
-                List<Ticket> tickets = ticketRepository.findByBranchIdAndDateBetween(branchId, startDate, endDate);
-                List<Expense> expenses = expenseRepository.findByBranchIdAndDateBetween(branchId, startDate, endDate);
+                StopWatch sectionWatch = new StopWatch();
+                sectionWatch.start("Database fetch");
 
-                // 2️⃣ Agrupar tickets por periodo (diario, semanal, mensual, anual)
-                Map<OffsetDateTime, List<Ticket>> ticketsByPeriod = tickets.stream()
-                                .collect(Collectors.groupingBy(t -> getPeriodStart(t.getDate(), frequency)));
+                // 🔹 1. Consultas a la base de datos
+                List<Ticket> allTickets = ticketRepository.findByBranchIdAndDateBetween(branchId, startDate, endDate);
+                List<Expense> allExpenses = expenseRepository.findByBranchIdAndDateBetween(branchId, startDate,
+                                endDate);
 
-                Map<OffsetDateTime, List<Expense>> expensesByPeriod = expenses.stream()
-                                .collect(Collectors.groupingBy(e -> getPeriodStart(e.getDate(), frequency)));
+                sectionWatch.stop();
+                log.info("⏱ DB fetch took: {} ms", sectionWatch.getTotalTimeMillis());
 
                 List<ReportEntryDTO> reports = new ArrayList<>();
 
-                for (OffsetDateTime periodStart : ticketsByPeriod.keySet()) {
-                        OffsetDateTime periodEnd = getPeriodEnd(periodStart, frequency);
+                OffsetDateTime current = startDate;
+                while (!current.isAfter(endDate)) {
+                        OffsetDateTime periodStart = current;
+                        OffsetDateTime adjustedStart = periodStart;
+                        OffsetDateTime periodEnd;
 
-                        List<Ticket> periodTickets = ticketsByPeriod.getOrDefault(periodStart, Collections.emptyList());
-                        List<Expense> periodExpenses = expensesByPeriod.getOrDefault(periodStart,
-                                        Collections.emptyList());
-
-                        // 3️⃣ Generar listas de sales de una sola vez
-                        List<Sale> sales = periodTickets.stream().flatMap(t -> t.getSales().stream()).toList();
-
-                        // 4️⃣ Calcular totales y mapas en un solo recorrido
-                        BigDecimal totalSales = BigDecimal.ZERO;
-                        BigDecimal totalSold = BigDecimal.ZERO;
-                        Map<String, BigDecimal> salesByCategory = new HashMap<>();
-                        Map<String, BigDecimal> salesByProduct = new HashMap<>();
-                        Map<String, BigDecimal> quantitiesByProduct = new HashMap<>();
-                        Map<String, BigDecimal> quantitiesByCategory = new HashMap<>();
-
-                        for (Sale sale : sales) {
-                                BigDecimal price = sale.getSubtotal();
-                                BigDecimal quantity = sale.getQuantity();
-
-                                totalSales = totalSales.add(price);
-                                totalSold = totalSold.add(quantity);
-
-                                String category = sale.getProduct().getCategory().getName();
-                                String product = sale.getProduct().getName();
-
-                                salesByCategory.merge(category, price, BigDecimal::add);
-                                salesByProduct.merge(product, price, BigDecimal::add);
-                                quantitiesByProduct.merge(product, quantity, BigDecimal::add);
-                                quantitiesByCategory.merge(category, quantity, BigDecimal::add);
+                        switch (frequency.toLowerCase()) {
+                                case "daily":
+                                        periodEnd = ReportUtils.getEndOfDay(periodStart);
+                                        break;
+                                case "weekly":
+                                        adjustedStart = ReportUtils.getStartOfWeek(periodStart);
+                                        periodEnd = ReportUtils.getEndOfWeek(adjustedStart);
+                                        break;
+                                case "monthly":
+                                        periodEnd = periodStart.plusMonths(1).minusNanos(1);
+                                        break;
+                                case "yearly":
+                                        periodEnd = periodStart.plusYears(1).minusNanos(1);
+                                        break;
+                                default:
+                                        throw new IllegalArgumentException("Frequency not supported: " + frequency);
                         }
 
-                        // 5️⃣ Totales de gastos
-                        BigDecimal totalExpenses = periodExpenses.stream()
-                                        .map(Expense::getPaid)
-                                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                        final OffsetDateTime finalStart = adjustedStart;
+                        final OffsetDateTime finalEnd = periodEnd;
 
-                        BigDecimal totalBought = periodExpenses.stream()
-                                        .map(Expense::getQuantity)
-                                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                        sectionWatch = new StopWatch();
+                        sectionWatch.start("Filtering");
 
-                        BigDecimal totalProfit = totalSales.subtract(totalExpenses);
+                        // 🔹 2. Filtrado de datos
+                        List<Ticket> tickets = allTickets.stream()
+                                        .filter(t -> !t.getDate().isBefore(finalStart)
+                                                        && !t.getDate().isAfter(finalEnd))
+                                        .toList();
 
-                        // 6️⃣ Totales especiales de categorías
-                        BigDecimal slaughteredChicken = salesByCategory.getOrDefault(SLAUGHTERED_CHICKEN,
-                                        BigDecimal.ZERO);
-                        BigDecimal eggs = salesByCategory.getOrDefault(EGG_CATEGORY, BigDecimal.ZERO);
-                        BigDecimal eggCartons = salesByCategory.getOrDefault(EGG_CARTON_CATEGORY, BigDecimal.ZERO);
-                        BigDecimal totalEggsSale = salesByCategory.getOrDefault(ALL_EGGS_CATEGORY, BigDecimal.ZERO);
+                        List<Expense> expenses = allExpenses.stream()
+                                        .filter(e -> !e.getDate().isBefore(finalStart)
+                                                        && !e.getDate().isAfter(finalEnd))
+                                        .toList();
 
-                        // 7️⃣ Crear DTO
-                        ReportEntryDTO report = ReportEntryDTO.builder()
+                        sectionWatch.stop();
+                        log.info("⏱ Filtering for {} → {} took: {} ms", finalStart.toLocalDate(),
+                                        finalEnd.toLocalDate(), sectionWatch.getTotalTimeMillis());
+
+                        sectionWatch = new StopWatch();
+                        sectionWatch.start("Calculations");
+
+                        // 🔹 3. Cálculos y armado del DTO
+                        List<Sale> sales = tickets.stream().flatMap(t -> t.getSales().stream()).toList();
+
+                        BigDecimal totalSales = ReportUtils.sumTicketsTotal(tickets);
+                        BigDecimal totalExpenses = ReportUtils.sumExpensesPaid(expenses);
+                        BigDecimal totalProfit = ReportUtils.calculateProfit(totalSales, totalExpenses);
+                        BigDecimal totalSold = ReportUtils.sumSalesQuantity(sales);
+                        BigDecimal totalBought = ReportUtils.sumExpensesQuantity(expenses);
+
+                        reports.add(ReportEntryDTO.builder()
                                         .branchId(branchId)
-                                        .startDate(periodStart)
-                                        .endDate(periodEnd)
+                                        .startDate(finalStart)
+                                        .endDate(finalEnd)
                                         .frequency(frequency)
                                         .totalSales(totalSales)
                                         .totalExpenses(totalExpenses)
                                         .totalProfit(totalProfit)
                                         .totalSold(totalSold)
                                         .totalBought(totalBought)
-                                        .slaughteredChicken(slaughteredChicken)
-                                        .salesByCategory(salesByCategory)
-                                        .salesByProduct(salesByProduct)
-                                        .quantitiesByProduct(quantitiesByProduct)
-                                        .quantitiesByCategory(quantitiesByCategory)
-                                        .expensesByCategory(periodExpenses.stream()
-                                                        .collect(Collectors.groupingBy(
-                                                                        e -> e.getCategory().getName(),
-                                                                        Collectors.mapping(Expense::getPaid,
-                                                                                        Collectors.reducing(
-                                                                                                        BigDecimal.ZERO,
-                                                                                                        BigDecimal::add)))))
-                                        .eggs(eggs)
-                                        .eggCartons(eggCartons)
-                                        .totalEggsSale(totalEggsSale)
-                                        .build();
+                                        .build());
 
-                        reports.add(report);
+                        sectionWatch.stop();
+                        log.info("⚙️ Calculations for {} took: {} ms", finalStart.toLocalDate(),
+                                        sectionWatch.getTotalTimeMillis());
+
+                        current = periodEnd.plusNanos(1);
                 }
 
-                // 8️⃣ Ordenar por fecha de inicio
-                reports.sort(Comparator.comparing(ReportEntryDTO::getStartDate));
+                globalWatch.stop();
+                log.info("🏁 Total report generation took: {} ms", globalWatch.getTotalTimeMillis());
 
                 return reports;
-        }
-
-        // 🔹 Helper para obtener inicio de periodo
-        private OffsetDateTime getPeriodStart(OffsetDateTime date, String frequency) {
-                return switch (frequency.toLowerCase()) {
-                        case "daily" -> ReportUtils.getStartOfDay(date);
-                        case "weekly" -> ReportUtils.getStartOfWeek(date);
-                        case "monthly" -> date.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS);
-                        case "yearly" -> date.withDayOfYear(1).truncatedTo(ChronoUnit.DAYS);
-                        default -> throw new IllegalArgumentException("Frequency not supported: " + frequency);
-                };
-        }
-
-        // 🔹 Helper para obtener fin de periodo
-        private OffsetDateTime getPeriodEnd(OffsetDateTime periodStart, String frequency) {
-                return switch (frequency.toLowerCase()) {
-                        case "daily" -> ReportUtils.getEndOfDay(periodStart);
-                        case "weekly" -> ReportUtils.getEndOfWeek(periodStart);
-                        case "monthly" -> periodStart.plusMonths(1).minusNanos(1);
-                        case "yearly" -> periodStart.plusYears(1).minusNanos(1);
-                        default -> throw new IllegalArgumentException("Frequency not supported: " + frequency);
-                };
         }
 
 }
