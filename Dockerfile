@@ -18,17 +18,11 @@ WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
+# DEBUG temporal
+RUN echo "SPRING_PROFILES_ACTIVE=$SPRING_PROFILES_ACTIVE"
+RUN echo "DB_URL=$DB_URL"
+RUN echo "DB_USERNAME=$DB_USERNAME"
+RUN echo "DB_PASSWORD=$DB_PASSWORD"
 
 # Usa variable de entorno para el perfil
-# ... tus instrucciones anteriores
-
-# WORKDIR y copia final del JAR
-WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
-
-# CMD temporal para debug
-CMD sh -c "echo SPRING_PROFILES_ACTIVE=$SPRING_PROFILES_ACTIVE && \
-           echo DB_URL=$DB_URL && \
-           echo DB_USERNAME=$DB_USERNAME && \
-           echo DB_PASSWORD=$DB_PASSWORD && \
-           java -jar app.jar --spring.profiles.active=$SPRING_PROFILES_ACTIVE"
+CMD sh -c "java -jar app.jar --spring.profiles.active=$SPRING_PROFILES_ACTIVE"
