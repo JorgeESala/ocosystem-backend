@@ -20,4 +20,4 @@ COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
 
 # Usa variable de entorno para el perfil
-CMD sh -c "echo DB_URL=$DB_URL && echo DB_USERNAME=$DB_USERNAME && echo DB_PASSWORD=<hidden> && java -jar app.jar --spring.profiles.active=$SPRING_PROFILES_ACTIVE"
+CMD sh -c "echo SPRING_PROFILES_ACTIVE=$SPRING_PROFILES_ACTIVE; echo DB_URL=$DB_URL; java -jar app.jar --spring.profiles.active=$SPRING_PROFILES_ACTIVE"
