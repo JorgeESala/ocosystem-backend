@@ -557,6 +557,11 @@ public class ReportService {
                         BigDecimal totalProfit = ReportUtils.calculateProfit(totalSales, totalExpenses);
                         BigDecimal totalSold = ReportUtils.sumSalesQuantity(sales);
                         BigDecimal totalBought = ReportUtils.sumExpensesQuantity(expenses);
+                        Map<String, BigDecimal> salesByProduct = ReportUtils.salesByProduct(sales);
+                        Map<String, BigDecimal> quantitiesByProduct = ReportUtils.quantitiesByProduct(sales);
+                        Map<String, BigDecimal> salesByCategory = ReportUtils.salesByCategory(sales);
+                        Map<String, BigDecimal> quantitiesByCategory = ReportUtils.quantitiesByCategory(sales);
+
 
                         reports.add(ReportEntryDTO.builder()
                                         .branchId(branchId)
@@ -565,6 +570,10 @@ public class ReportService {
                                         .frequency(frequency)
                                         .totalSales(totalSales)
                                         .totalExpenses(totalExpenses)
+                                        .quantitiesByProduct(quantitiesByProduct)
+                                        .quantitiesByCategory(quantitiesByCategory)
+                                        .salesByProduct(salesByProduct)
+                                        .salesByCategory(salesByCategory)
                                         .totalProfit(totalProfit)
                                         .totalSold(totalSold)
                                         .totalBought(totalBought)

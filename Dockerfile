@@ -19,5 +19,6 @@ COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
 ARG SPRING_PROFILES_ACTIVE
+RUN echo $SPRING_PROFILES_ACTIVE
 # Usa variable de entorno para el perfil
-CMD ["sh", "-c", "echo SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}; java -jar app.jar --spring.profiles.active=${SPRING_PROFILES_ACTIVE}"]
+CMD ["sh", "-c", "java -jar app.jar --spring.profiles.active=${SPRING_PROFILES_ACTIVE}"]
