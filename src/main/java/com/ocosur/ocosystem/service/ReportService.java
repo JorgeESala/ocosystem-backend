@@ -8,11 +8,9 @@ import java.time.OffsetDateTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -490,15 +488,15 @@ public class ReportService {
 
                 StopWatch sectionWatch = new StopWatch();
                 sectionWatch.start("Database fetch");
-
+                endDate = ReportUtils.getEndOfDay(endDate);
                 // 🔹 1. Consultas a la base de datos
                 List<Ticket> allTickets = ticketRepository.findByBranchIdAndDateBetween(branchId, startDate, endDate);
                 List<Expense> allExpenses = expenseRepository.findByBranchIdAndDateBetween(branchId, startDate,
                                 endDate);
 
+                
                 sectionWatch.stop();
                 log.info("⏱ DB fetch took: {} ms", sectionWatch.getTotalTimeMillis());
-
                 List<ReportEntryDTO> reports = new ArrayList<>();
 
                 OffsetDateTime current = startDate;
@@ -530,7 +528,6 @@ public class ReportService {
 
                         sectionWatch = new StopWatch();
                         sectionWatch.start("Filtering");
-
                         // 🔹 2. Filtrado de datos
                         List<Ticket> tickets = allTickets.stream()
                                         .filter(t -> !t.getDate().isBefore(finalStart)
@@ -561,7 +558,6 @@ public class ReportService {
                         Map<String, BigDecimal> quantitiesByProduct = ReportUtils.quantitiesByProduct(sales);
                         Map<String, BigDecimal> salesByCategory = ReportUtils.salesByCategory(sales);
                         Map<String, BigDecimal> quantitiesByCategory = ReportUtils.quantitiesByCategory(sales);
-
 
                         reports.add(ReportEntryDTO.builder()
                                         .branchId(branchId)
