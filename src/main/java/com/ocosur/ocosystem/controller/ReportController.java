@@ -31,7 +31,7 @@ public class ReportController {
     private ReportService reportService;
 
     @GetMapping("/weekly")
-    public WeeklyReportDTO getWeeklyReport(
+    public WeeklyReportDTO getWeeklyCalendarReport(
             @RequestParam Integer branchId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime date) {
         return reportService.getWeeklyReport(branchId, date, true);
@@ -78,16 +78,22 @@ public class ReportController {
     @GetMapping
     public ResponseEntity<List<ReportEntryDTO>> getReports(
             @RequestParam Integer branchId,
-            @RequestParam String startDate, // ISO 8601 string
-            @RequestParam String endDate,   // ISO 8601 string
-            @RequestParam String frequency  // daily, weekly, monthly, yearly
-    ) {
+            @RequestParam String startDate,
+            @RequestParam String endDate,
+            @RequestParam String frequency) {
         try {
             // Parsear fechas
             OffsetDateTime start = OffsetDateTime.parse(startDate);
             OffsetDateTime end = OffsetDateTime.parse(endDate);
 
-            List<ReportEntryDTO> reports = reportService.getReports(branchId, start, end, frequency);
+            List<ReportEntryDTO> reports;
+
+            // 🔹 Si el frequency es "weekly_custom", usa la nueva función
+            if ("weekly_custom".equalsIgnoreCase(frequency)) {
+                reports = reportService.getReportsByCustomWeeks(branchId, start, end);
+            } else {
+                reports = reportService.getReports(branchId, start, end, frequency);
+            }
 
             return ResponseEntity.ok(reports);
         } catch (DateTimeParseException e) {

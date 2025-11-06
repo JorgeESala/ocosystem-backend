@@ -8,6 +8,7 @@ import java.time.OffsetDateTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -494,7 +495,6 @@ public class ReportService {
                 List<Expense> allExpenses = expenseRepository.findByBranchIdAndDateBetween(branchId, startDate,
                                 endDate);
 
-                
                 sectionWatch.stop();
                 log.info("⏱ DB fetch took: {} ms", sectionWatch.getTotalTimeMillis());
                 List<ReportEntryDTO> reports = new ArrayList<>();
@@ -584,6 +584,88 @@ public class ReportService {
 
                 globalWatch.stop();
                 log.info("🏁 Total report generation took: {} ms", globalWatch.getTotalTimeMillis());
+
+                return reports;
+        }
+
+        public List<ReportEntryDTO> getReportsByCustomWeeks(Integer branchId, OffsetDateTime startDate,
+                        OffsetDateTime endDate) {
+
+                // 🔹 Calcular cuántos días hay entre start y end
+                long daysBetween = ChronoUnit.DAYS.between(startDate.toLocalDate(), endDate.toLocalDate()) + 1;
+
+                // 🔹 Calcular cuántas semanas completas de 7 días se necesitan
+                long weeksNeeded = (long) Math.ceil(daysBetween / 7.0);
+
+                // 🔹 Ajustar el endDate al final de la última semana completa
+                OffsetDateTime extendedEnd = startDate.plusDays((weeksNeeded * 7) - 1);
+
+                // 🔹 Incluir todo el último día de esa última semana
+                extendedEnd = ReportUtils.getEndOfDay(extendedEnd);
+
+                // 1️⃣ Consultar todos los datos del rango total extendido
+                List<Ticket> allTickets = ticketRepository.findByBranchIdAndDateBetween(branchId, startDate,
+                                extendedEnd);
+                List<Expense> allExpenses = expenseRepository.findByBranchIdAndDateBetween(branchId, startDate,
+                                extendedEnd);
+
+                List<ReportEntryDTO> reports = new ArrayList<>();
+
+                // 2️⃣ Dividir en semanas exactas de 7 días desde startDate
+                OffsetDateTime currentStart = startDate;
+
+                while (!currentStart.isAfter(extendedEnd)) {
+                        OffsetDateTime currentEnd = currentStart.plusDays(6);
+
+                        OffsetDateTime finalStart = currentStart;
+                        OffsetDateTime finalEnd = currentEnd;
+
+                        // 3️⃣ Filtrar solo los datos de esos 7 días
+                        List<Ticket> tickets = allTickets.stream()
+                                        .filter(t -> !t.getDate().isBefore(finalStart)
+                                                        && !t.getDate().isAfter(finalEnd))
+                                        .toList();
+
+                        List<Expense> expenses = allExpenses.stream()
+                                        .filter(e -> !e.getDate().isBefore(finalStart)
+                                                        && !e.getDate().isAfter(finalEnd))
+                                        .toList();
+
+                        // 4️⃣ Calcular totales
+                        List<Sale> sales = tickets.stream()
+                                        .flatMap(t -> t.getSales().stream())
+                                        .toList();
+
+                        BigDecimal totalSales = ReportUtils.sumTicketsTotal(tickets);
+                        BigDecimal totalExpenses = ReportUtils.sumExpensesPaid(expenses);
+                        BigDecimal totalProfit = ReportUtils.calculateProfit(totalSales, totalExpenses);
+                        BigDecimal totalSold = ReportUtils.sumSalesQuantity(sales);
+                        BigDecimal totalBought = ReportUtils.sumExpensesQuantity(expenses);
+                        Map<String, BigDecimal> salesByProduct = ReportUtils.salesByProduct(sales);
+                        Map<String, BigDecimal> quantitiesByProduct = ReportUtils.quantitiesByProduct(sales);
+                        Map<String, BigDecimal> salesByCategory = ReportUtils.salesByCategory(sales);
+                        Map<String, BigDecimal> quantitiesByCategory = ReportUtils.quantitiesByCategory(sales);
+
+                        // 5️⃣ Crear el DTO
+                        reports.add(ReportEntryDTO.builder()
+                                        .branchId(branchId)
+                                        .startDate(finalStart)
+                                        .endDate(finalEnd)
+                                        .frequency("weekly_custom")
+                                        .totalSales(totalSales)
+                                        .totalExpenses(totalExpenses)
+                                        .totalProfit(totalProfit)
+                                        .totalSold(totalSold)
+                                        .totalBought(totalBought)
+                                        .salesByProduct(salesByProduct)
+                                        .quantitiesByProduct(quantitiesByProduct)
+                                        .salesByCategory(salesByCategory)
+                                        .quantitiesByCategory(quantitiesByCategory)
+                                        .build());
+
+                        // 6️⃣ Avanzar 7 días
+                        currentStart = currentStart.plusDays(7);
+                }
 
                 return reports;
         }
