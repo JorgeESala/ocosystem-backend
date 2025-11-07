@@ -3,6 +3,7 @@ package com.ocosur.ocosystem.util;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -13,16 +14,18 @@ import com.ocosur.ocosystem.model.Ticket;
 
 public class ReportUtils {
 
-    private static final ZoneId MEXICO_ZONE = ZoneId.of("UTC-5");
+    private static final ZoneOffset MEXICO_ZONE = ZoneOffset.ofHours(-5);
 
     public static OffsetDateTime getStartOfDay(OffsetDateTime date) {
-        LocalDate localDate = date.toLocalDate();
-        return localDate.atStartOfDay(MEXICO_ZONE).toOffsetDateTime();
+        return date
+                .withOffsetSameInstant(MEXICO_ZONE)
+                .toLocalDate()
+                .atStartOfDay()
+                .atOffset(MEXICO_ZONE);
     }
 
     public static OffsetDateTime getEndOfDay(OffsetDateTime date) {
-        LocalDate localDate = date.toLocalDate();
-        return localDate.plusDays(1).atStartOfDay(MEXICO_ZONE).minusNanos(1).toOffsetDateTime();
+        return getStartOfDay(date).plusDays(1).minusNanos(1);
     }
 
     public static OffsetDateTime getStartOfWeek(OffsetDateTime date) {
@@ -92,6 +95,7 @@ public class ReportUtils {
                         s -> s.getProduct().getName(),
                         Collectors.mapping(Sale::getQuantity, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
     }
+
     public static Map<String, BigDecimal> quantitiesByCategory(Collection<Sale> sales) {
         return sales.stream()
                 .collect(Collectors.groupingBy(
@@ -105,7 +109,6 @@ public class ReportUtils {
                         e -> e.getCategory().getName(),
                         Collectors.mapping(Expense::getPaid, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
     }
-
 
     public static List<Sale> filterByCategoryId(Collection<Sale> sales, Integer categoryId) {
         return sales.stream()
@@ -130,7 +133,6 @@ public class ReportUtils {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    
     public static BigDecimal calculateProfit(BigDecimal totalSales, BigDecimal totalExpenses) {
         return totalSales.subtract(totalExpenses);
     }

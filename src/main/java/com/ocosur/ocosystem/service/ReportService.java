@@ -49,25 +49,30 @@ public class ReportService {
         private final Integer EGG_CARTON_CATEGORY = 8;
         private final Integer ALL_EGGS_CATEGORY = 9;
 
+        private static final ZoneOffset MEXICO_ZONE = ZoneOffset.of("-05:00");
+
         private OffsetDateTime getEndOfWeek(OffsetDateTime start) {
-                DayOfWeek dayOfWeek = start.getDayOfWeek();
+                DayOfWeek dayOfWeek = start.atZoneSameInstant(MEXICO_ZONE).getDayOfWeek();
                 int daysUntilSaturday = DayOfWeek.SATURDAY.getValue() - dayOfWeek.getValue();
                 if (daysUntilSaturday < 0) {
                         daysUntilSaturday += 7;
                 }
 
-                return start.plusDays(daysUntilSaturday)
+                return start.atZoneSameInstant(MEXICO_ZONE)
+                                .plusDays(daysUntilSaturday)
                                 .withHour(23)
                                 .withMinute(59)
                                 .withSecond(59)
-                                .withNano(999999999);
+                                .withNano(999_999_999)
+                                .toOffsetDateTime();
         }
 
         private OffsetDateTime getWeekStart(OffsetDateTime dateTime) {
-                LocalDate weekStartDate = dateTime.toLocalDate()
+                LocalDate weekStartDate = dateTime.atZoneSameInstant(MEXICO_ZONE)
+                                .toLocalDate()
                                 .with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY));
 
-                return weekStartDate.atStartOfDay().atOffset(dateTime.getOffset());
+                return weekStartDate.atStartOfDay(MEXICO_ZONE).toOffsetDateTime();
         }
 
         public List<LocalDate> getSaturdays(int year, int month) {
@@ -115,13 +120,20 @@ public class ReportService {
         }
 
         public DailyReportDTO getDailyReport(Integer branchId, OffsetDateTime date) {
-                OffsetDateTime start = ReportUtils.getStartOfDay(date);
-                OffsetDateTime end = ReportUtils.getEndOfDay(date);
+                OffsetDateTime startLocal = ReportUtils.getStartOfDay(date);
+                OffsetDateTime endLocal = startLocal.plusDays(1); // 👈 fin exclusivo
 
-                List<Ticket> tickets = ticketRepository.findByBranchIdAndDateBetween(branchId, start, end);
+                OffsetDateTime start = startLocal.withOffsetSameInstant(ZoneOffset.UTC);
+                OffsetDateTime end = endLocal.withOffsetSameInstant(ZoneOffset.UTC);
+
+                List<Ticket> tickets = ticketRepository.findByBranchIdAndDateGreaterThanEqualAndDateLessThan(branchId,
+                                start, end);
                 List<Sale> sales = tickets.stream().flatMap(t -> t.getSales().stream()).toList();
-                List<Expense> expenses = expenseRepository.findByBranchIdAndDateBetween(branchId, start, end);
+                List<Expense> expenses = expenseRepository.findByBranchIdAndDateGreaterThanEqualAndDateLessThan(
+                                branchId, start,
+                                end);
 
+                // --- Totales ---
                 BigDecimal totalSales = ReportUtils.sumTicketsTotal(tickets);
                 BigDecimal totalExpenses = ReportUtils.sumExpensesPaid(expenses);
                 BigDecimal totalProfit = ReportUtils.calculateProfit(totalSales, totalExpenses);
@@ -141,62 +153,90 @@ public class ReportService {
                 Map<String, BigDecimal> quantitiesByProduct = ReportUtils.quantitiesByProduct(sales);
                 Map<String, BigDecimal> expensesByCategory = ReportUtils.expensesByCategory(expenses);
 
+                // ✅ Normalización de fecha a -05 fijo
+                LocalDate localDate = date.withOffsetSameInstant(MEXICO_ZONE).toLocalDate();
+                OffsetDateTime normalized = localDate.atStartOfDay().atOffset(MEXICO_ZONE);
+
                 return new DailyReportDTO(
-                                branchId, start, totalSales, totalExpenses, totalProfit,
-                                totalSold, totalBought, gut, waste, slaughtered, eggs,
-                                eggCarton, totalEggsSale, salesByCategory, salesByProduct,
-                                quantitiesByProduct, expensesByCategory);
+                                branchId,
+                                normalized,
+                                totalSales,
+                                totalExpenses,
+                                totalProfit,
+                                totalSold,
+                                totalBought,
+                                gut,
+                                waste,
+                                slaughtered,
+                                eggs,
+                                eggCarton,
+                                totalEggsSale,
+                                salesByCategory,
+                                salesByProduct,
+                                quantitiesByProduct,
+                                expensesByCategory);
         }
 
         public WeeklyReportDTO getWeeklyReport(Integer branchId, OffsetDateTime date, Boolean includeDays) {
-                OffsetDateTime start = ReportUtils.getStartOfWeek(date);
-                OffsetDateTime end = ReportUtils.getEndOfWeek(start);
-                List<Ticket> tickets = ticketRepository.findByBranchIdAndDateBetween(branchId, start, end);
-                List<Expense> expenses = expenseRepository.findByBranchIdAndDateBetween(branchId, start, end);
+                // 📅 1️⃣ Calcular semana local completa (-05)
+                OffsetDateTime startLocal = ReportUtils.getStartOfWeek(date);
+                OffsetDateTime endLocal = startLocal.plusDays(7); // 👈 fin exclusivo
+
+                // 🌎 2️⃣ Convertir a UTC antes de consultar la BD
+                OffsetDateTime startUtc = startLocal.withOffsetSameInstant(ZoneOffset.UTC);
+                OffsetDateTime endUtc = endLocal.withOffsetSameInstant(ZoneOffset.UTC);
+
+                // 🧮 3️⃣ Consultar usando >= start y < end
+                List<Ticket> tickets = ticketRepository.findByBranchIdAndDateGreaterThanEqualAndDateLessThan(branchId,
+                                startUtc, endUtc);
+                List<Expense> expenses = expenseRepository
+                                .findByBranchIdAndDateGreaterThanEqualAndDateLessThan(branchId, startUtc, endUtc);
                 List<Sale> sales = tickets.stream().flatMap(t -> t.getSales().stream()).toList();
 
-                // --- Totales principales ---
+                // 📊 4️⃣ Totales principales
                 BigDecimal totalSales = ReportUtils.sumTicketsTotal(tickets);
                 BigDecimal totalExpenses = ReportUtils.sumExpensesPaid(expenses);
                 BigDecimal totalProfit = ReportUtils.calculateProfit(totalSales, totalExpenses);
                 BigDecimal totalSold = ReportUtils.sumSalesQuantity(sales);
                 BigDecimal totalBought = ReportUtils.sumExpensesQuantity(expenses);
 
-                // --- Totales específicos ---
+                // 🥚 5️⃣ Totales específicos
                 BigDecimal eggs = ReportUtils.sumByCategoryId(sales, EGG_CATEGORY);
                 BigDecimal eggCarton = ReportUtils.sumByCategoryId(sales, EGG_CARTON_CATEGORY);
                 BigDecimal totalEggsSale = ReportUtils.sumByParentCategory(sales, ALL_EGGS_CATEGORY);
 
-                // --- Agrupaciones ---
+                // 📦 6️⃣ Agrupaciones
                 Map<String, BigDecimal> salesByCategory = ReportUtils.salesByCategory(sales);
                 Map<String, BigDecimal> salesByProduct = ReportUtils.salesByProduct(sales);
                 Map<String, BigDecimal> quantitiesByProduct = ReportUtils.quantitiesByProduct(sales);
                 Map<String, BigDecimal> expensesByCategory = ReportUtils.expensesByCategory(expenses);
 
-                // --- Reportes de productos (si ya tienes tu método helper existente) ---
                 List<ProductReportDTO> productReports = getProductsReport(sales);
 
-                // --- Reportes diarios opcionales ---
+                // 📅 7️⃣ Reportes diarios (sin solaparse)
                 List<DailyReportDTO> dailyReports = new ArrayList<>();
                 if (includeDays) {
-                        OffsetDateTime current = start;
-                        while (!current.isAfter(end)) {
-                                dailyReports.add(getDailyReport(branchId, current));
+                        LocalDate current = startLocal.toLocalDate();
+                        LocalDate endDate = endLocal.toLocalDate();
+
+                        while (current.isBefore(endDate)) { // 👈 fin exclusivo
+                                OffsetDateTime currentDate = current.atStartOfDay().atOffset(MEXICO_ZONE);
+                                dailyReports.add(getDailyReport(branchId, currentDate));
                                 current = current.plusDays(1);
                         }
                 }
 
-                // --- Construcción del DTO final ---
+                // 🧾 8️⃣ DTO final
                 return new WeeklyReportDTO(
                                 branchId,
-                                start,
+                                startLocal, // mantiene la zona -05 para el front
                                 totalSales,
                                 totalExpenses,
                                 totalProfit,
                                 totalSold,
                                 totalBought,
-                                null, // gut (opcional si no aplica semanal)
-                                null, // waste (opcional si no aplica semanal)
+                                null,
+                                null,
                                 eggs,
                                 eggCarton,
                                 totalEggsSale,

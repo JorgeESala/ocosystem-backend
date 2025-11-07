@@ -7,11 +7,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.ocosur.ocosystem.model.Expense;
 
-public interface ExpenseRepository extends JpaRepository<Expense,Integer>{
-    
+public interface ExpenseRepository extends JpaRepository<Expense, Integer> {
+
     List<Expense> findByBranchIdAndDateBetween(
-        Integer branchId,
-        OffsetDateTime start,
-        OffsetDateTime end
-    );
+            Integer branchId,
+            OffsetDateTime start,
+            OffsetDateTime end);
+
+    List<Expense> findByBranchIdAndDateGreaterThanEqualAndDateLessThan(
+            Integer branchId,
+            OffsetDateTime start,
+            OffsetDateTime end);
+
 }
