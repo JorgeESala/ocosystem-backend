@@ -5,6 +5,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -76,10 +77,13 @@ public class ReportController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ReportEntryDTO>> getReports(
-            @RequestParam Integer branchId,
+    public ResponseEntity<?> getReports(
+            @RequestParam List<Integer> branchId,
             @RequestParam String startDate,
             @RequestParam String endDate,
+            @RequestParam String metric,
+            @RequestParam Boolean includeCategories,
+            @RequestParam (required = false) List<String> categories,
             @RequestParam String frequency) {
         try {
             // Parsear fechas
@@ -89,13 +93,15 @@ public class ReportController {
             List<ReportEntryDTO> reports;
 
             // 🔹 Si el frequency es "weekly_custom", usa la nueva función
-            if ("weekly_custom".equalsIgnoreCase(frequency)) {
-                reports = reportService.getReportsByCustomWeeks(branchId, start, end);
+            if (frequency.equalsIgnoreCase("weekly_custom") || frequency.equalsIgnoreCase("daily_custom")) {
+                reports = reportService.getReportsCustom(branchId, start, end, frequency, metric, true, categories);
+                
             } else {
-                reports = reportService.getReports(branchId, start, end, frequency);
+                reports = reportService.getReportsCustom(branchId, start, end, frequency,metric,false,categories);
             }
+            List<Map<String, Object>> formatted = reportService.formatForChart(reports, frequency, metric, includeCategories, categories);
 
-            return ResponseEntity.ok(reports);
+            return ResponseEntity.ok(formatted);
         } catch (DateTimeParseException e) {
             return ResponseEntity.badRequest().build();
         }

@@ -12,6 +12,8 @@ import java.util.Map;
 public class ReportEntryDTO {
 
     private Integer branchId;
+    private String branchName;
+    private Integer year;
     private OffsetDateTime startDate;
     private OffsetDateTime endDate;
     private String frequency; 

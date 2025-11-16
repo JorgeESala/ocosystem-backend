@@ -2,8 +2,7 @@ package com.ocosur.ocosystem.dto;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.List;
-
+ 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

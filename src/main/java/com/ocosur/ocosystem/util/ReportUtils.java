@@ -4,7 +4,11 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -78,7 +82,7 @@ public class ReportUtils {
     public static Map<String, BigDecimal> salesByCategory(Collection<Sale> sales) {
         return sales.stream()
                 .collect(Collectors.groupingBy(
-                        s -> s.getProduct().getCategory().getName(),
+                        s -> s.getProduct().getCategory().getName().toLowerCase(),
                         Collectors.mapping(Sale::getSubtotal, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
     }
 
@@ -99,7 +103,7 @@ public class ReportUtils {
     public static Map<String, BigDecimal> quantitiesByCategory(Collection<Sale> sales) {
         return sales.stream()
                 .collect(Collectors.groupingBy(
-                        s -> s.getProduct().getCategory().getName(),
+                        s -> s.getProduct().getCategory().getName().toLowerCase(),
                         Collectors.mapping(Sale::getQuantity, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
     }
 
@@ -140,4 +144,61 @@ public class ReportUtils {
     public static BigDecimal calculateWaste(BigDecimal totalBought, BigDecimal gut, BigDecimal totalSold) {
         return totalBought.subtract(gut).subtract(totalSold);
     }
+
+    public static int getWeekOfYear(OffsetDateTime date) {
+        return date.get(ChronoField.ALIGNED_WEEK_OF_YEAR);
+    }
+
+    public static OffsetDateTime getStartOfWeekSunday(OffsetDateTime date) {
+        DayOfWeek dow = date.getDayOfWeek();
+        int diff = dow.getValue() % 7; // domingo = 0
+        return date.minusDays(diff).truncatedTo(ChronoUnit.DAYS);
+    }
+
+    public static OffsetDateTime getEndOfWeekSaturday(OffsetDateTime date) {
+        return getStartOfWeekSunday(date).plusDays(6).with(LocalTime.MAX);
+    }
+
+    public static OffsetDateTime getStartOfMonth(OffsetDateTime date) {
+        return date.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS);
+    }
+
+    public static OffsetDateTime getEndOfMonth(OffsetDateTime date) {
+        return date.withDayOfMonth(date.toLocalDate().lengthOfMonth())
+                .with(LocalTime.MAX);
+    }
+
+    public static int getWeekIndexOfMonth(OffsetDateTime date) {
+        OffsetDateTime monthStart = date.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS);
+        long days = ChronoUnit.DAYS.between(monthStart, date.truncatedTo(ChronoUnit.DAYS));
+        return (int) (days / 7) + 1; // Semana 1, 2, 3...
+    }
+
+    public static OffsetDateTime expandStart(OffsetDateTime date, String frequency) {
+        switch (frequency) {
+            case "weekly":
+                return getStartOfWeekSunday(date); // domingo
+            case "weekly_custom":
+                return date; // tu weekly custom usa el mismo día como inicio
+            case "monthly":
+                return date.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS);
+            default:
+                return getStartOfDay(date); // daily
+        }
+    }
+
+    public static OffsetDateTime expandEnd(OffsetDateTime date, String frequency) {
+        switch (frequency) {
+            case "weekly":
+                return getEndOfWeekSaturday(getStartOfWeekSunday(date)); // sábado
+            case "weekly_custom":
+                return date.plusDays(6).withOffsetSameInstant(MEXICO_ZONE).withHour(23).withMinute(59).withSecond(59);
+            case "monthly":
+                OffsetDateTime startMonth = date.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS);
+                return startMonth.plusMonths(1).minusNanos(1);
+            default:
+                return getEndOfDay(date); // daily
+        }
+    }
+
 }
