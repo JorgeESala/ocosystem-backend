@@ -14,6 +14,8 @@ public class ReportEntryDTO {
     private Integer branchId;
     private String branchName;
     private Integer year;
+    private Integer weekIndex;
+    private Integer segmentIndex;
     private OffsetDateTime startDate;
     private OffsetDateTime endDate;
     private String frequency; 

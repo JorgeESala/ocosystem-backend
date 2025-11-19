@@ -6,6 +6,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -152,11 +153,16 @@ public class ReportUtils {
     public static OffsetDateTime getStartOfWeekSunday(OffsetDateTime date) {
         DayOfWeek dow = date.getDayOfWeek();
         int diff = dow.getValue() % 7; // domingo = 0
-        return date.minusDays(diff).truncatedTo(ChronoUnit.DAYS);
+        return getStartOfDay(date.minusDays(diff));
     }
 
-    public static OffsetDateTime getEndOfWeekSaturday(OffsetDateTime date) {
-        return getStartOfWeekSunday(date).plusDays(6).with(LocalTime.MAX);
+    // Asumiendo que getStartOfWeekSunday devuelve el domingo a las 00:00:00
+    public static OffsetDateTime getEndOfWeekSaturday(OffsetDateTime startOfWeekSunday) {
+        // 1. Ir al inicio del DOMINGO siguiente
+        OffsetDateTime nextSunday = startOfWeekSunday.plusWeeks(1).minusNanos(1);
+
+        // 2. Retroceder un nanosegundo para estar en el final absoluto del SÁBADO
+        return nextSunday.minusNanos(1);
     }
 
     public static OffsetDateTime getStartOfMonth(OffsetDateTime date) {
@@ -179,26 +185,159 @@ public class ReportUtils {
             case "weekly":
                 return getStartOfWeekSunday(date); // domingo
             case "weekly_custom":
-                return date; // tu weekly custom usa el mismo día como inicio
+                return date;
             case "monthly":
                 return date.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS);
             default:
-                return getStartOfDay(date); // daily
+                return getStartOfDay(date);
         }
     }
 
-    public static OffsetDateTime expandEnd(OffsetDateTime date, String frequency) {
+    public static OffsetDateTime expandEnd(OffsetDateTime startDate, OffsetDateTime endDate, String frequency) {
         switch (frequency) {
             case "weekly":
-                return getEndOfWeekSaturday(getStartOfWeekSunday(date)); // sábado
+                return getEndOfWeekSaturday(getStartOfWeekSunday(endDate));
             case "weekly_custom":
-                return date.plusDays(6).withOffsetSameInstant(MEXICO_ZONE).withHour(23).withMinute(59).withSecond(59);
+                long daysDiff = ChronoUnit.DAYS.between(startDate.toLocalDate(), endDate.toLocalDate());
+
+                long blockIndex = daysDiff / 7;
+
+                OffsetDateTime blockStart = startDate.plusDays(blockIndex * 7);
+                System.out.println("Block Start: " + getEndOfDay(blockStart.plusDays(6)));
+                return getEndOfDay(blockStart.plusDays(6));
             case "monthly":
-                OffsetDateTime startMonth = date.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS);
+                OffsetDateTime startMonth = endDate.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS);
                 return startMonth.plusMonths(1).minusNanos(1);
             default:
-                return getEndOfDay(date); // daily
+                return getEndOfDay(endDate);
         }
     }
 
+    public static List<OffsetDateTime> getStartOfYears(OffsetDateTime start, OffsetDateTime end) {
+        List<OffsetDateTime> years = new ArrayList<>();
+
+        // 1. Normalizar el inicio al primer día del año de inicio (Enero 1, 00:00:00)
+        OffsetDateTime current = start
+                .withMonth(1)
+                .withDayOfMonth(1)
+                .withHour(0)
+                .withMinute(0)
+                .withSecond(0)
+                .withNano(0);
+
+        // 2. Normalizar el final al final del día
+        OffsetDateTime normalizedEnd = getEndOfDay(end); // Usando tu utilidad existente
+
+        // 3. Iterar año a año
+        while (current.isBefore(normalizedEnd) || current.isEqual(normalizedEnd)) {
+            years.add(current);
+
+            // Avanzar al primer día del año siguiente
+            current = current.plusYears(1)
+                    .withMonth(1)
+                    .withDayOfMonth(1);
+
+            // Si el siguiente año ya sobrepasa el rango, terminamos.
+            if (current.isAfter(normalizedEnd.plusYears(1)))
+                break;
+        }
+
+        return years;
+    }
+
+    public static List<OffsetDateTime> getStartOfMonths(OffsetDateTime start, OffsetDateTime end) {
+        List<OffsetDateTime> months = new ArrayList<>();
+
+        // 1. Normalizar el inicio al primer día del mes de inicio (a las 00:00:00)
+        OffsetDateTime current = start
+                .withDayOfMonth(1)
+                .withHour(0)
+                .withMinute(0)
+                .withSecond(0)
+                .withNano(0);
+
+        // 2. Normalizar el final al final del día
+        OffsetDateTime normalizedEnd = getEndOfDay(end); // Usando tu utilidad existente
+
+        // 3. Iterar mes a mes
+        while (current.isBefore(normalizedEnd) || current.isEqual(normalizedEnd)) {
+            months.add(current);
+
+            // Avanzar al primer día del mes siguiente
+            current = current.plusMonths(1)
+                    .withDayOfMonth(1);
+
+            // Si el siguiente mes ya sobrepasa el rango, terminamos.
+            if (current.isAfter(normalizedEnd.plusDays(31)))
+                break;
+        }
+
+        return months;
+    }
+
+    public static List<OffsetDateTime> getStartOfWeeks(OffsetDateTime start, OffsetDateTime end) {
+        List<OffsetDateTime> weeks = new ArrayList<>();
+
+        // 1. Normalizar el inicio al primer día de la semana que contiene 'start'
+        OffsetDateTime current = getStartOfWeekSunday(start);
+        // 2. Normalizar el final al final del día
+        OffsetDateTime normalizedEnd = getEndOfDay(end);
+
+        // 3. Iterar semana a semana
+        while (current.isBefore(normalizedEnd) || current.isEqual(normalizedEnd)) {
+            weeks.add(current);
+
+            // Avanzar al primer día de la semana siguiente
+            current = current.plusWeeks(1);
+
+            // Si la siguiente semana ya sobrepasa el rango, terminamos.
+            if (current.isAfter(normalizedEnd.plusDays(7)))
+                break;
+        }
+        return weeks;
+    }
+
+    // Para generateReports (Acumulación)
+    public static void accumulateMap(Map<String, BigDecimal> destination, Map<String, BigDecimal> source) {
+        source.forEach((key, value) -> destination.merge(key, value, BigDecimal::add));
+    }
+
+    // Para generateReports (Segmentación de 7 días)
+    // Simula la obtención de los puntos de inicio (start dates) de los segmentos de
+    // 7 días
+    public static List<OffsetDateTime> getStartOfSegments(OffsetDateTime start, OffsetDateTime end, int days) {
+        List<OffsetDateTime> starts = new ArrayList<>();
+        OffsetDateTime current = getStartOfDay(start);
+        OffsetDateTime userEnd = getEndOfDay(end); // Aseguramos que la comparación sea correcta
+
+        while (current.isBefore(userEnd) || current.isEqual(userEnd)) {
+            starts.add(current);
+            // Avanza al inicio del siguiente segmento (7 días después)
+            current = current.plusDays(days);
+        }
+        return starts;
+    }
+
+    public static List<OffsetDateTime> getStartOfDays(OffsetDateTime start, OffsetDateTime end) {
+
+        // 1. Normalizar el rango de fechas para asegurar la iteración correcta.
+        // Se usa la fecha de inicio del día para la iteración.
+        OffsetDateTime normalizedStart = getStartOfDay(start);
+        OffsetDateTime normalizedEnd = getStartOfDay(end);
+
+        List<OffsetDateTime> startOfDays = new ArrayList<>();
+        OffsetDateTime current = normalizedStart;
+
+        // 2. Iterar día a día. Usamos isBefore/isEqual para incluir el día final.
+        // La condición de parada es el inicio del día siguiente al final del rango.
+        while (current.isBefore(normalizedEnd) || current.isEqual(normalizedEnd)) {
+
+            startOfDays.add(current);
+
+            // 3. Avanzar al inicio del día siguiente.
+            current = current.plusDays(1);
+        }
+
+        return startOfDays;
+    }
 }

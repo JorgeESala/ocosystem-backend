@@ -10,12 +10,10 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
-import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -729,23 +727,65 @@ public class ReportService {
                         String frequency,
                         String metric,
                         boolean compareWithPreviousYear,
-                        List<String> categories) {
+                        List<String> categories,
+                        boolean compareSelf) { // 👈 Nuevo parámetro
 
                 List<ReportEntryDTO> combinedReports = new ArrayList<>();
 
+                // ⭐ Lógica de Comparación Interna (compareSelf = true)
+                if (compareSelf && branchIds.size() == 1) {
+                        Integer branchId = branchIds.get(0);
+
+                        List<OffsetDateTime> startPoints = switch (frequency) {
+                                case "weekly" -> ReportUtils.getStartOfWeeks(startDate, endDate);
+                                case "monthly" -> ReportUtils.getStartOfMonths(startDate, endDate);
+                                case "yearly" -> ReportUtils.getStartOfYears(startDate, endDate);
+                                default -> List.of();
+                        };
+
+                        int segmentIndex = 1;
+                        String innerFrequency = switch (frequency) {
+                                case "weekly" -> "daily"; // Compara días (D-S)
+                                case "monthly" -> "weekly"; // Compara semanas (S1 vs S2...)
+                                case "annual" -> "monthly"; // Compara meses (Ene vs Feb...)
+                                default -> "daily";
+                        };
+
+                        for (OffsetDateTime segmentStart : startPoints) {
+                                OffsetDateTime segmentEnd = switch (frequency) {
+                                        case "weekly" -> ReportUtils.getEndOfWeek(segmentStart);
+                                        case "monthly" -> segmentStart.plusMonths(1).minusNanos(1);
+                                        case "annual" -> segmentStart.plusYears(1).minusNanos(1);
+                                        default -> endDate;
+                                };
+
+                                // Generar reportes con la frecuencia interna para la rama
+                                List<ReportEntryDTO> segmentReports = generateReports(branchId, segmentStart,
+                                                segmentEnd,
+                                                innerFrequency, metric, categories);
+
+                                final int currentIndex = segmentIndex;
+                                // Asignar el índice del segmento de comparación (e.g., Semana 1, Mes 3)
+                                segmentReports.forEach(r -> r.setSegmentIndex(currentIndex));
+
+                                combinedReports.addAll(segmentReports);
+                                segmentIndex++;
+                        }
+
+                        return combinedReports;
+                }
+
                 for (Integer branchId : branchIds) {
-                        // Reportes actuales
+
                         List<ReportEntryDTO> currentReports = generateReports(branchId, startDate, endDate, frequency,
                                         metric, categories);
 
                         currentReports.forEach(r -> r.setYear(startDate.getYear()));
                         combinedReports.addAll(currentReports);
 
-                        // Reportes del año anterior
                         if (compareWithPreviousYear) {
                                 OffsetDateTime prevStart = startDate.minusYears(1);
                                 OffsetDateTime prevEnd = endDate.minusYears(1);
-
                                 List<ReportEntryDTO> previousReports = generateReports(branchId, prevStart, prevEnd,
                                                 frequency, metric, categories);
 
@@ -771,8 +811,9 @@ public class ReportService {
 
                 // 2️⃣ Expandir rango real según frecuencia
                 OffsetDateTime realStart = ReportUtils.expandStart(userStart, frequency);
-                OffsetDateTime realEnd = ReportUtils.expandEnd(userEnd, frequency);
-                // 3️⃣ Consultar datos ya expandidos
+                OffsetDateTime realEnd = ReportUtils.expandEnd(userStart, userEnd, frequency);
+
+                // 3️⃣ Consultar datos ya expandidos (¡Esto sólo se hace UNA VEZ!)
                 List<Ticket> allTickets = ticketRepository
                                 .findByBranchIdAndDateBetween(branchId, realStart, realEnd);
 
@@ -793,81 +834,88 @@ public class ReportService {
                                 .collect(Collectors.groupingBy(s -> s.getTicket().getDate()
                                                 .withOffsetSameInstant(MEXICO_ZONE).toLocalDate()));
 
-                // 6️⃣ Generar el rango expandido
-                List<LocalDate> timeline = realStart.toLocalDate()
-                                .datesUntil(realEnd.plusDays(1).toLocalDate())
-                                .collect(Collectors.toList());
+                // 6️⃣ Crear los puntos de inicio (segmentos) para la frecuencia solicitada
+                List<OffsetDateTime> segmentStarts = switch (frequency) {
+                        case "weekly" -> ReportUtils.getStartOfWeeks(realStart, realEnd);
+                        case "weekly_custom" -> ReportUtils.getStartOfSegments(realStart, realEnd, 7); // Segmentos de 7
+                                                                                                       // días
+                        case "monthly" -> ReportUtils.getStartOfMonths(realStart, realEnd);
+                        default -> ReportUtils.getStartOfDays(realStart, realEnd); // "daily" o cualquier otra
+                };
 
                 List<ReportEntryDTO> reports = new ArrayList<>();
 
-                // 7️⃣ Generar un entry por cada fecha real expandida
-                for (LocalDate date : timeline) {
+                // 7️⃣ Bucle sobre los segmentos y ACUMULACIÓN de datos
+                for (OffsetDateTime segmentStart : segmentStarts) {
 
-                        OffsetDateTime base = date.atStartOfDay().atOffset(MEXICO_ZONE);
+                        // 8️⃣ Calcular el final del segmento y su rango diario
+                        OffsetDateTime segmentEnd = switch (frequency) {
+                                case "weekly" -> ReportUtils.getEndOfWeekSaturday(segmentStart);
+                                case "weekly_custom" -> segmentStart.plusDays(7).minusNanos(1);
+                                case "monthly" -> segmentStart.plusMonths(1).minusNanos(1);
+                                default -> segmentStart.plusDays(1).minusNanos(1); // daily
+                        };
 
-                        OffsetDateTime rangeStart;
-                        OffsetDateTime rangeEnd;
+                        // Recortar siempre al endDate del usuario
+                        segmentEnd = segmentEnd.isAfter(realEnd) ? realEnd : segmentEnd;
 
-                        switch (frequency) {
-                                case "weekly":
-                                        rangeStart = ReportUtils.getStartOfWeekSunday(base);
-                                        rangeEnd = ReportUtils.getEndOfWeekSaturday(rangeStart);
-                                        break;
+                        // Obtener la lista de días a ACUMULAR en este segmento
+                        List<LocalDate> daysToAccumulate = segmentStart.toLocalDate()
+                                        .datesUntil(segmentEnd.plusDays(1).toLocalDate())
+                                        .toList();
 
-                                case "weekly_custom":
-                                        rangeStart = base;
-                                        rangeEnd = base.plusDays(6);
-                                        break;
+                        // 9️⃣ Acumulación del segmento
+                        BigDecimal segmentTotalSales = BigDecimal.ZERO;
+                        BigDecimal segmentTotalSold = BigDecimal.ZERO;
+                        Map<String, BigDecimal> accumulatedSalesByCategory = new HashMap<>();
+                        Map<String, BigDecimal> accumulatedQuantitiesByCategory = new HashMap<>();
 
-                                case "monthly":
-                                        rangeStart = base.withDayOfMonth(1);
-                                        rangeEnd = rangeStart.plusMonths(1).minusNanos(1);
-                                        break;
+                        for (LocalDate date : daysToAccumulate) {
 
-                                default: // daily
-                                        rangeStart = base;
-                                        rangeEnd = base.plusDays(1).minusNanos(1);
+                                List<Sale> daySales = salesByDate.getOrDefault(date, List.of());
+                                List<Ticket> dayTickets = ticketsByDate.getOrDefault(date, List.of());
+
+                                // Filtrar categorías
+                                List<Sale> filteredSales = lowerCats.isEmpty()
+                                                ? daySales
+                                                : daySales.stream()
+                                                                .filter(s -> s.getProduct().getCategory() != null
+                                                                                && lowerCats.contains(s.getProduct()
+                                                                                                .getCategory().getName()
+                                                                                                .toLowerCase()))
+                                                                .toList();
+
+                                // Sumar al total del segmento
+                                segmentTotalSales = segmentTotalSales.add(ReportUtils.sumTicketsTotal(dayTickets));
+                                segmentTotalSold = segmentTotalSold.add(ReportUtils.sumSalesQuantity(filteredSales));
+
+                                // Acumular por categoría (se asume ReportUtils.accumulateMap existe)
+                                if (!lowerCats.isEmpty()) {
+                                        ReportUtils.accumulateMap(accumulatedSalesByCategory,
+                                                        ReportUtils.salesByCategory(filteredSales));
+                                        ReportUtils.accumulateMap(accumulatedQuantitiesByCategory,
+                                                        ReportUtils.quantitiesByCategory(filteredSales));
+                                }
                         }
 
-                        // 8️⃣ Obtener datos del día
-                        List<Sale> daySales = salesByDate.getOrDefault(date, List.of());
-                        List<Ticket> dayTickets = ticketsByDate.getOrDefault(date, List.of());
-
-                        // Filtrar categorías
-                        List<Sale> filteredSales = lowerCats.isEmpty()
-                                        ? daySales
-                                        : daySales.stream()
-                                                        .filter(s -> {
-                                                                if (s.getProduct().getCategory() == null)
-                                                                        return false;
-                                                                return lowerCats.contains(s.getProduct().getCategory()
-                                                                                .getName().toLowerCase());
-                                                        })
-                                                        .toList();
-
-                        BigDecimal totalSales = ReportUtils.sumTicketsTotal(dayTickets);
-                        BigDecimal totalSold = ReportUtils.sumSalesQuantity(filteredSales);
-
-                        Map<String, BigDecimal> dataByCategory = Map.of();
-                        if (!lowerCats.isEmpty()) {
-                                dataByCategory = metric.equals("sales")
-                                                ? ReportUtils.salesByCategory(filteredSales)
-                                                : ReportUtils.quantitiesByCategory(filteredSales);
-                        }
+                        // 🔟 Crear UN ÚNICO DTO por segmento
+                        Map<String, BigDecimal> dataByCategory = metric.equals("sales") ? accumulatedSalesByCategory
+                                        : accumulatedQuantitiesByCategory;
 
                         reports.add(
                                         ReportEntryDTO.builder()
                                                         .branchId(branchId)
-                                                        .startDate(rangeStart)
-                                                        .endDate(rangeEnd)
+                                                        .startDate(segmentStart)
+                                                        .endDate(segmentEnd)
                                                         .frequency(frequency)
-                                                        .totalSales(metric.equals("sales") ? totalSales : null)
-                                                        .totalSold(metric.equals("quantity") ? totalSold : null)
+                                                        .totalSales(metric.equals("sales") ? segmentTotalSales : null)
+                                                        .totalSold(metric.equals("quantity") ? segmentTotalSold : null)
                                                         .salesByCategory(metric.equals("sales") ? dataByCategory : null)
                                                         .quantitiesByCategory(metric.equals("quantity") ? dataByCategory
                                                                         : null)
                                                         .build());
-                }
+
+                } // fin del for (segmentStarts)
 
                 return reports;
         }
@@ -877,87 +925,115 @@ public class ReportService {
                         String frequency,
                         String metric, // "sales" o "quantity"
                         boolean includeCategories,
-                        List<String> categories) {
-                Map<String, Map<String, BigDecimal>> chartMap = new LinkedHashMap<>();
-                DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("dd MMM", Locale.forLanguageTag("es-MX"));
-                List<Integer> branchIds = reports.stream()
-                                .map(ReportEntryDTO::getBranchId)
-                                .distinct()
-                                .toList();
+                        List<String> categories,
+                        boolean compareSelf) {
 
+                Map<String, Map<String, BigDecimal>> chartMap = new LinkedHashMap<>();
+                // ... (Definición de formatters y obtención de branchNames) ...
+                DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("dd MMM", Locale.forLanguageTag("es-MX"));
+                DateTimeFormatter weekStartFormatter = DateTimeFormatter.ofPattern("dd MMM",
+                                Locale.forLanguageTag("es-MX"));
+                List<Integer> branchIds = reports.stream().map(ReportEntryDTO::getBranchId).distinct().toList();
                 Map<Integer, String> branchNames = branchRepository.findAllById(branchIds).stream()
                                 .collect(Collectors.toMap(Branch::getId, Branch::getName));
-                // Ordenar por fecha real antes de asignar labels
-                reports = reports.stream()
-                                .sorted(Comparator.comparing(ReportEntryDTO::getStartDate))
-                                .toList();
 
                 for (ReportEntryDTO r : reports) {
+                        String label; // Eje X
+                        String lineKey; // Nombre de la línea (la clave)
                         r.setBranchName(branchNames.getOrDefault(r.getBranchId(), "Sucursal " + r.getBranchId()));
-                        // 📅 Etiqueta: Semana o Día
-                        String label;
 
-                        switch (frequency) {
+                        // 1️⃣ Lógica de Etiquetado del Eje X (label)
 
-                                case "weekly_custom":
-                                        int weekIndex = ReportUtils.getWeekIndexOfMonth(r.getStartDate());
-                                        String monthShort = r.getStartDate().getMonth()
-                                                        .getDisplayName(TextStyle.SHORT, new Locale("es", "MX"));
-                                        label = "S" + weekIndex + " " + monthShort;
-                                        break;
+                        if (compareSelf) {
+                                // ⭐ Lógica de Comparación Interna (Etiqueta Eje X)
 
-                                case "weekly":
-                                        int isoWeek = ReportUtils.getWeekOfYear(r.getStartDate()); // ya tienes esta
-                                                                                                   // función
-                                        label = "S" + isoWeek + " " + r.getStartDate().getYear();
-                                        break;
+                                lineKey = switch (frequency) {
+                                        case "weekly" -> r.getBranchName() + " - S" + r.getSegmentIndex();
+                                        case "monthly" -> r.getBranchName() +" - S" + r.getSegmentIndex();
+                                        case "annual" -> r.getStartDate().getMonth().getDisplayName(TextStyle.FULL,
+                                                        new Locale("es", "MX"));
+                                        default -> "Segmento " + r.getSegmentIndex();
+                                };
 
-                                case "monthly":
-                                        String monthName = r.getStartDate().getMonth()
-                                                        .getDisplayName(TextStyle.SHORT, new Locale("es", "MX"));
-                                        label = monthName + " " + r.getStartDate().getYear();
-                                        break;
+                                label = switch (frequency) {
+                                        case "weekly" -> r.getStartDate().getDayOfWeek().getDisplayName(TextStyle.SHORT,
+                                                        new Locale("es", "MX"));
+                                        case "monthly" -> "S" + ReportUtils.getWeekIndexOfMonth(r.getStartDate());
+                                        case "annual" -> String.valueOf(r.getStartDate().getYear());
+                                        default -> r.getStartDate().format(dayFormatter);
+                                };
 
-                                default:
-                                        label = r.getStartDate().format(dayFormatter);
-                                        break;
+                                if ("annual".equals(frequency)) {
+                                        label = r.getStartDate().getMonth().getDisplayName(TextStyle.SHORT,
+                                                        new Locale("es", "MX"));
+                                        lineKey = "Año " + r.getSegmentIndex();
+                                }
+
+                        } else {
+                                // 💡 Lógica Normal o Anual (Etiqueta Eje X)
+                                switch (frequency) {
+                                        case "weekly_custom": // ✅ Etiqueta de rango de 7 días
+                                                String startStr = r.getStartDate().format(weekStartFormatter);
+                                                // Usamos el día de fin real, para segmentos incompletos (ej. 1-10)
+                                                String endStr = r.getEndDate().format(dayFormatter);
+                                                label = startStr + " - " + endStr;
+                                                break;
+                                        case "weekly":
+                                                int isoWeek = ReportUtils.getWeekOfYear(r.getStartDate());
+                                                label = "S" + isoWeek + " " + r.getStartDate().getYear();
+                                                break;
+                                        case "monthly":
+                                                String monthName = r.getStartDate().getMonth()
+                                                                .getDisplayName(TextStyle.SHORT,
+                                                                                new Locale("es", "MX"));
+                                                label = monthName + " " + r.getStartDate().getYear();
+                                                break;
+                                        default: // daily
+                                                label = r.getStartDate().format(dayFormatter);
+                                                break;
+                                }
+
+                                // Si el reporte es comparación ANUAL, la línea es el año (ej. 2024, 2025)
+                                lineKey = r.getBranchName();
                         }
 
                         chartMap.putIfAbsent(label, new LinkedHashMap<>());
                         Map<String, BigDecimal> row = chartMap.get(label);
 
-                        int year = r.getStartDate().getYear();
+                        // 2️⃣ Asignación del Valor (Sin Acumulación)
 
                         // 💰 Seleccionar fuente de datos según métrica
                         Map<String, BigDecimal> source = metric.equals("sales") ? r.getSalesByCategory()
                                         : r.getQuantitiesByCategory();
 
-                        // 🧮 Sin categorías → total por sucursal y año
+                        // 🧮 Sin categorías → usar la clave de línea generada (lineKey)
                         if (!includeCategories || categories.isEmpty()) {
-                                String key = r.getBranchName() + " " + year;
                                 BigDecimal total = metric.equals("sales") ? r.getTotalSales() : r.getTotalSold();
-                                row.put(key, row.getOrDefault(key, BigDecimal.ZERO).add(total));
+                                // ✅ CAMBIO CLAVE: ASIGNACIÓN DIRECTA (el valor ya viene acumulado)
+                                String keyWithCategory = lineKey + " " + r.getStartDate().getYear() ;
+                                row.put(keyWithCategory, total);
                         } else {
-                                // 🧩 Con categorías → agregar una línea por sucursal-categoría y año
+                                // 🧩 Con categorías → agregar una línea por categoría
                                 for (String cat : categories) {
                                         BigDecimal val = source.getOrDefault(cat.toLowerCase(), BigDecimal.ZERO);
-                                        String key = r.getBranchName() + " - " + cat + " " + year;
-                                        row.put(key, row.getOrDefault(key, BigDecimal.ZERO).add(val));
+                                        // Adjuntar al nombre de la línea (incluye el año si es comparación anual)
+                                        String keyWithCategory = lineKey + " - " + cat +" " + r.getStartDate().getYear() ;
+
+                                        // ✅ CAMBIO CLAVE: ASIGNACIÓN DIRECTA (el valor ya viene acumulado)
+                                        row.put(keyWithCategory, val);
                                 }
                         }
 
                 }
 
-                // 🔹 Convertir a lista final ordenada
+                // ... (Mapeo final a List<Map<String, Object>>)
                 return chartMap.entrySet().stream()
                                 .map(entry -> {
                                         Map<String, Object> obj = new LinkedHashMap<>();
                                         obj.put("label", entry.getKey());
-                                        // Convertir BigDecimal → double (para graficar sin problemas)
                                         entry.getValue().forEach((k, v) -> obj.put(k, v.doubleValue()));
                                         return obj;
                                 })
                                 .toList();
         }
-
 }

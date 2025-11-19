@@ -83,23 +83,27 @@ public class ReportController {
             @RequestParam String endDate,
             @RequestParam String metric,
             @RequestParam Boolean includeCategories,
-            @RequestParam (required = false) List<String> categories,
-            @RequestParam String frequency) {
+            @RequestParam(required = false) List<String> categories,
+            @RequestParam String frequency,
+            @RequestParam Boolean compareSelf) {
         try {
             // Parsear fechas
             OffsetDateTime start = OffsetDateTime.parse(startDate);
             OffsetDateTime end = OffsetDateTime.parse(endDate);
 
             List<ReportEntryDTO> reports;
-
             // 🔹 Si el frequency es "weekly_custom", usa la nueva función
             if (frequency.equalsIgnoreCase("weekly_custom") || frequency.equalsIgnoreCase("daily_custom")) {
-                reports = reportService.getReportsCustom(branchId, start, end, frequency, metric, true, categories);
-                
+                reports = reportService.getReportsCustom(branchId, start, end, frequency, metric, true, categories,
+                        compareSelf);
+
             } else {
-                reports = reportService.getReportsCustom(branchId, start, end, frequency,metric,false,categories);
+                reports = reportService.getReportsCustom(branchId, start, end, frequency, metric, false, categories,
+                        compareSelf);
+
             }
-            List<Map<String, Object>> formatted = reportService.formatForChart(reports, frequency, metric, includeCategories, categories);
+            List<Map<String, Object>> formatted = reportService.formatForChart(reports, frequency, metric,
+                    includeCategories, categories, compareSelf);
 
             return ResponseEntity.ok(formatted);
         } catch (DateTimeParseException e) {
