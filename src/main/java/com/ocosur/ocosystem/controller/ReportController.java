@@ -5,6 +5,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -31,7 +32,7 @@ public class ReportController {
     private ReportService reportService;
 
     @GetMapping("/weekly")
-    public WeeklyReportDTO getWeeklyReport(
+    public WeeklyReportDTO getWeeklyCalendarReport(
             @RequestParam Integer branchId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime date) {
         return reportService.getWeeklyReport(branchId, date, true);
@@ -76,20 +77,35 @@ public class ReportController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ReportEntryDTO>> getReports(
-            @RequestParam Integer branchId,
-            @RequestParam String startDate, // ISO 8601 string
-            @RequestParam String endDate,   // ISO 8601 string
-            @RequestParam String frequency  // daily, weekly, monthly, yearly
-    ) {
+    public ResponseEntity<?> getReports(
+            @RequestParam List<Integer> branchId,
+            @RequestParam String startDate,
+            @RequestParam String endDate,
+            @RequestParam String metric,
+            @RequestParam Boolean includeCategories,
+            @RequestParam(required = false) List<String> categories,
+            @RequestParam String frequency,
+            @RequestParam Boolean compareSelf) {
         try {
             // Parsear fechas
             OffsetDateTime start = OffsetDateTime.parse(startDate);
             OffsetDateTime end = OffsetDateTime.parse(endDate);
 
-            List<ReportEntryDTO> reports = reportService.getReports(branchId, start, end, frequency);
+            List<ReportEntryDTO> reports;
+            // 🔹 Si el frequency es "weekly_custom", usa la nueva función
+            if (frequency.equalsIgnoreCase("weekly_custom") || frequency.equalsIgnoreCase("daily_custom")) {
+                reports = reportService.getReportsCustom(branchId, start, end, frequency, metric, true, categories,
+                        compareSelf);
 
-            return ResponseEntity.ok(reports);
+            } else {
+                reports = reportService.getReportsCustom(branchId, start, end, frequency, metric, false, categories,
+                        compareSelf);
+
+            }
+            List<Map<String, Object>> formatted = reportService.formatForChart(reports, frequency, metric,
+                    includeCategories, categories, compareSelf);
+
+            return ResponseEntity.ok(formatted);
         } catch (DateTimeParseException e) {
             return ResponseEntity.badRequest().build();
         }
