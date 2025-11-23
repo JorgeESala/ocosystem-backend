@@ -971,15 +971,14 @@ public class ReportService {
 
                         } else {
                                 // 💡 Lógica Normal o Anual (Etiqueta Eje X)
+                                int isoWeek;
                                 switch (frequency) {
                                         case "weekly_custom": // ✅ Etiqueta de rango de 7 días
-                                                String startStr = r.getStartDate().format(weekStartFormatter);
-                                                // Usamos el día de fin real, para segmentos incompletos (ej. 1-10)
-                                                String endStr = r.getEndDate().format(dayFormatter);
-                                                label = startStr + " - " + endStr;
+                                                isoWeek = ReportUtils.getWeekOfYear(r.getStartDate());
+                                                label = "S" + isoWeek;
                                                 break;
                                         case "weekly":
-                                                int isoWeek = ReportUtils.getWeekOfYear(r.getStartDate());
+                                                isoWeek = ReportUtils.getWeekOfYear(r.getStartDate());
                                                 label = "S" + isoWeek + " " + r.getStartDate().getYear();
                                                 break;
                                         case "monthly":
