@@ -32,12 +32,10 @@ import com.ocosur.ocosystem.dto.ProductReportDTO;
 import com.ocosur.ocosystem.dto.ReportEntryDTO;
 import com.ocosur.ocosystem.dto.WeeklyReportDTO;
 import com.ocosur.ocosystem.model.Branch;
-import com.ocosur.ocosystem.model.Expense;
 import com.ocosur.ocosystem.model.Product;
 import com.ocosur.ocosystem.model.Sale;
 import com.ocosur.ocosystem.model.Ticket;
 import com.ocosur.ocosystem.repository.BranchRepository;
-import com.ocosur.ocosystem.repository.ExpenseRepository;
 import com.ocosur.ocosystem.repository.SaleRepository;
 import com.ocosur.ocosystem.repository.TicketRepository;
 import com.ocosur.ocosystem.util.ReportUtils;
@@ -48,7 +46,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ReportService {
         private final TicketRepository ticketRepository;
-        private final ExpenseRepository expenseRepository;
         private final BranchRepository branchRepository;
         private final SaleRepository saleRepository;
         private static final Logger log = LoggerFactory.getLogger(ReportService.class);
@@ -139,20 +136,14 @@ public class ReportService {
                 List<Ticket> tickets = ticketRepository.findByBranchIdAndDateGreaterThanEqualAndDateLessThan(branchId,
                                 start, end);
                 List<Sale> sales = tickets.stream().flatMap(t -> t.getSales().stream()).toList();
-                List<Expense> expenses = expenseRepository.findByBranchIdAndDateGreaterThanEqualAndDateLessThan(
-                                branchId, start,
-                                end);
+                
 
                 // --- Totales ---
                 BigDecimal totalSales = ReportUtils.sumTicketsTotal(tickets);
-                BigDecimal totalExpenses = ReportUtils.sumExpensesPaid(expenses);
-                BigDecimal totalProfit = ReportUtils.calculateProfit(totalSales, totalExpenses);
                 BigDecimal totalSold = ReportUtils.sumSalesQuantity(sales);
-                BigDecimal totalBought = ReportUtils.sumExpensesQuantity(expenses);
 
                 BigDecimal gut = ReportUtils.sumByCategoryId(sales, GUT_CATEGORY);
                 BigDecimal slaughtered = ReportUtils.sumByCategoryId(sales, SLAUGHTERED_CHICKEN);
-                BigDecimal waste = ReportUtils.calculateWaste(totalBought, gut, totalSold);
 
                 BigDecimal totalEggsSale = ReportUtils.sumByParentCategory(sales, ALL_EGGS_CATEGORY);
                 BigDecimal eggs = ReportUtils.sumByCategoryId(sales, EGG_CATEGORY);
@@ -161,7 +152,6 @@ public class ReportService {
                 Map<String, BigDecimal> salesByCategory = ReportUtils.salesByCategory(sales);
                 Map<String, BigDecimal> salesByProduct = ReportUtils.salesByProduct(sales);
                 Map<String, BigDecimal> quantitiesByProduct = ReportUtils.quantitiesByProduct(sales);
-                Map<String, BigDecimal> expensesByCategory = ReportUtils.expensesByCategory(expenses);
 
                 // ✅ Normalización de fecha a -05 fijo
                 LocalDate localDate = date.withOffsetSameInstant(MEXICO_ZONE).toLocalDate();
@@ -171,20 +161,16 @@ public class ReportService {
                                 branchId,
                                 normalized,
                                 totalSales,
-                                totalExpenses,
-                                totalProfit,
                                 totalSold,
-                                totalBought,
                                 gut,
-                                waste,
                                 slaughtered,
                                 eggs,
                                 eggCarton,
                                 totalEggsSale,
                                 salesByCategory,
                                 salesByProduct,
-                                quantitiesByProduct,
-                                expensesByCategory);
+                                quantitiesByProduct
+                        );
         }
 
         public WeeklyReportDTO getWeeklyReport(Integer branchId, OffsetDateTime date, Boolean includeDays) {
@@ -199,16 +185,12 @@ public class ReportService {
                 // 🧮 3️⃣ Consultar usando >= start y < end
                 List<Ticket> tickets = ticketRepository.findByBranchIdAndDateGreaterThanEqualAndDateLessThan(branchId,
                                 startUtc, endUtc);
-                List<Expense> expenses = expenseRepository
-                                .findByBranchIdAndDateGreaterThanEqualAndDateLessThan(branchId, startUtc, endUtc);
+                
                 List<Sale> sales = tickets.stream().flatMap(t -> t.getSales().stream()).toList();
 
                 // 📊 4️⃣ Totales principales
                 BigDecimal totalSales = ReportUtils.sumTicketsTotal(tickets);
-                BigDecimal totalExpenses = ReportUtils.sumExpensesPaid(expenses);
-                BigDecimal totalProfit = ReportUtils.calculateProfit(totalSales, totalExpenses);
                 BigDecimal totalSold = ReportUtils.sumSalesQuantity(sales);
-                BigDecimal totalBought = ReportUtils.sumExpensesQuantity(expenses);
 
                 // 🥚 5️⃣ Totales específicos
                 BigDecimal eggs = ReportUtils.sumByCategoryId(sales, EGG_CATEGORY);
@@ -219,7 +201,6 @@ public class ReportService {
                 Map<String, BigDecimal> salesByCategory = ReportUtils.salesByCategory(sales);
                 Map<String, BigDecimal> salesByProduct = ReportUtils.salesByProduct(sales);
                 Map<String, BigDecimal> quantitiesByProduct = ReportUtils.quantitiesByProduct(sales);
-                Map<String, BigDecimal> expensesByCategory = ReportUtils.expensesByCategory(expenses);
 
                 List<ProductReportDTO> productReports = getProductsReport(sales);
 
@@ -241,10 +222,7 @@ public class ReportService {
                                 branchId,
                                 startLocal, // mantiene la zona -05 para el front
                                 totalSales,
-                                totalExpenses,
-                                totalProfit,
                                 totalSold,
-                                totalBought,
                                 null,
                                 null,
                                 eggs,
@@ -252,7 +230,6 @@ public class ReportService {
                                 totalEggsSale,
                                 salesByCategory,
                                 salesByProduct,
-                                expensesByCategory,
                                 dailyReports,
                                 productReports);
         }
@@ -284,17 +261,8 @@ public class ReportService {
                                 .map(Sale::getQuantity)
                                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                List<Expense> expenses = Collections.emptyList();
-                if (categoryId == 1) {
-                        expenses = expenseRepository.findByBranchIdAndDateBetween(branchId, start, end).stream()
-                                        .filter(e -> e.getCategory() != null
-                                                        && e.getCategory().getId().equals(categoryId))
-                                        .toList();
-
-                }
-                BigDecimal totalBought = expenses.stream()
-                                .map(e -> e.getQuantity() == null ? BigDecimal.ZERO : e.getQuantity())
-                                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                
+                
 
                 if (categoryId == 1) {
                         List<Sale> sales = tickets.stream()
@@ -306,18 +274,13 @@ public class ReportService {
                                         .map(Sale::getQuantity)
                                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                        waste = totalBought.subtract(totalSold).subtract(gut);
                 }
                 // Totales
                 BigDecimal totalSales = salesInCategory.stream()
                                 .map(Sale::getSubtotal)
                                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                BigDecimal totalExpenses = expenses.stream()
-                                .map(Expense::getPaid)
-                                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-                BigDecimal totalProfit = totalSales.subtract(totalExpenses);
+        
 
                 // Ventas por producto
                 Map<String, BigDecimal> salesByCategory = salesInCategory.stream()
@@ -326,13 +289,7 @@ public class ReportService {
                                                 Collectors.mapping(Sale::getSubtotal, Collectors
                                                                 .reducing(BigDecimal.ZERO, BigDecimal::add))));
 
-                // Gastos por categoría (solo para pollo)
-                Map<String, BigDecimal> expensesByCategory = expenses.stream()
-                                .collect(Collectors.groupingBy(
-                                                e -> e.getCategory().getName(),
-                                                Collectors.mapping(Expense::getPaid, Collectors
-                                                                .reducing(BigDecimal.ZERO, BigDecimal::add))));
-
+                
                 if (includeDays) {
                         OffsetDateTime current = start;
                         while (!current.isAfter(end)) {
@@ -344,10 +301,7 @@ public class ReportService {
                                 branchId,
                                 start,
                                 totalSales,
-                                totalExpenses,
-                                totalProfit,
                                 totalSold,
-                                totalBought,
                                 gut,
                                 waste,
                                 null,
@@ -355,7 +309,6 @@ public class ReportService {
                                 null,
                                 salesByCategory,
                                 quantitiesByProduct,
-                                expensesByCategory,
                                 dailyReports, null);
         }
 
@@ -388,28 +341,18 @@ public class ReportService {
                                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
                 // Gastos (solo aplican si la categoría es pollo -> id = 1)
-                List<Expense> expenses = Collections.emptyList();
-                if (categoryId == 1) {
-                        expenses = expenseRepository.findByBranchIdAndDateBetween(branchId, start, end).stream()
-                                        .filter(e -> e.getCategory() != null
-                                                        && e.getCategory().getId().equals(categoryId))
-                                        .toList();
-                }
+                
+               
 
                 // Totales
                 BigDecimal totalSales = salesInCategory.stream()
                                 .map(Sale::getSubtotal)
                                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                BigDecimal totalExpenses = expenses.stream()
-                                .map(Expense::getPaid)
-                                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                BigDecimal totalProfit = totalSales.subtract(totalExpenses);
 
-                BigDecimal totalBought = expenses.stream()
-                                .map(e -> e.getQuantity() == null ? BigDecimal.ZERO : e.getQuantity())
-                                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+
 
                 if (categoryId == 1) {
                         List<Sale> sales = tickets.stream()
@@ -421,7 +364,6 @@ public class ReportService {
                                         .map(Sale::getQuantity)
                                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                        waste = totalBought.subtract(gut).subtract(totalSold);
                 }
                 // Ventas por producto (subtotal vendido por producto en la categoría)
                 Map<String, BigDecimal> salesByProduct = salesInCategory.stream()
@@ -452,10 +394,7 @@ public class ReportService {
                                 ym,
                                 categoryId,
                                 totalSales,
-                                totalExpenses,
-                                totalProfit,
                                 totalSold,
-                                totalBought,
                                 gut,
                                 waste,
                                 salesByProduct,
@@ -470,9 +409,7 @@ public class ReportService {
                 OffsetDateTime end = ym.atEndOfMonth().atTime(LocalTime.MAX).atOffset(ZoneOffset.ofHours(-5));
 
                 BigDecimal totalSales = BigDecimal.ZERO;
-                BigDecimal totalExpenses = BigDecimal.ZERO;
                 Map<String, BigDecimal> salesByCategory = new HashMap<>();
-                Map<String, BigDecimal> expensesByCategory = new HashMap<>();
                 List<Ticket> tickets = ticketRepository.findByBranchIdAndDateBetween(branchId, start, end);
                 List<WeeklyReportDTO> weeklyReports = new ArrayList<>();
                 List<ProductReportDTO> productReports = new ArrayList<>();
@@ -481,13 +418,10 @@ public class ReportService {
                         WeeklyReportDTO weekly = getWeeklyReport(branchId, weekStart, INCLUDE_DAYS);
 
                         totalSales = totalSales.add(weekly.getTotalSales());
-                        totalExpenses = totalExpenses.add(weekly.getTotalExpenses());
 
                         // acumular desgloses
                         weekly.getSalesByCategory().forEach(
                                         (cat, val) -> salesByCategory.merge(cat, val, BigDecimal::add));
-                        weekly.getExpensesByCategory().forEach(
-                                        (cat, val) -> expensesByCategory.merge(cat, val, BigDecimal::add));
 
                         weeklyReports.add(weekly);
                         weekStart = weekStart.plusWeeks(1);
@@ -512,22 +446,16 @@ public class ReportService {
                                 .filter(s -> s.getProduct().getCategory().getId().equals(EGG_CARTON_CATEGORY))
                                 .map(Sale::getQuantity)
                                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-                BigDecimal totalProfit = totalSales.subtract(totalExpenses);
 
                 productReports = getProductsReport(sales);
                 return new MonthlyReportDTO(
                                 branchId,
                                 ym.toString(),
                                 totalSales,
-                                totalExpenses,
-                                totalProfit,
-                                BigDecimal.ZERO,
-                                BigDecimal.ZERO,
                                 eggs,
                                 eggCarton,
                                 totalEggsSale,
                                 salesByCategory,
-                                expensesByCategory,
                                 weeklyReports,
                                 productReports);
         }
@@ -542,8 +470,7 @@ public class ReportService {
                 endDate = ReportUtils.getEndOfDay(endDate);
                 // 🔹 1. Consultas a la base de datos
                 List<Ticket> allTickets = ticketRepository.findByBranchIdAndDateBetween(branchId, startDate, endDate);
-                List<Expense> allExpenses = expenseRepository.findByBranchIdAndDateBetween(branchId, startDate,
-                                endDate);
+                
 
                 sectionWatch.stop();
                 log.info("⏱ DB fetch took: {} ms", sectionWatch.getTotalTimeMillis());
@@ -584,10 +511,7 @@ public class ReportService {
                                                         && !t.getDate().isAfter(finalEnd))
                                         .toList();
 
-                        List<Expense> expenses = allExpenses.stream()
-                                        .filter(e -> !e.getDate().isBefore(finalStart)
-                                                        && !e.getDate().isAfter(finalEnd))
-                                        .toList();
+            
 
                         sectionWatch.stop();
                         log.info("⏱ Filtering for {} → {} took: {} ms", finalStart.toLocalDate(),
@@ -600,10 +524,7 @@ public class ReportService {
                         List<Sale> sales = tickets.stream().flatMap(t -> t.getSales().stream()).toList();
 
                         BigDecimal totalSales = ReportUtils.sumTicketsTotal(tickets);
-                        BigDecimal totalExpenses = ReportUtils.sumExpensesPaid(expenses);
-                        BigDecimal totalProfit = ReportUtils.calculateProfit(totalSales, totalExpenses);
                         BigDecimal totalSold = ReportUtils.sumSalesQuantity(sales);
-                        BigDecimal totalBought = ReportUtils.sumExpensesQuantity(expenses);
                         Map<String, BigDecimal> salesByProduct = ReportUtils.salesByProduct(sales);
                         Map<String, BigDecimal> quantitiesByProduct = ReportUtils.quantitiesByProduct(sales);
                         Map<String, BigDecimal> salesByCategory = ReportUtils.salesByCategory(sales);
@@ -615,14 +536,11 @@ public class ReportService {
                                         .endDate(finalEnd)
                                         .frequency(frequency)
                                         .totalSales(totalSales)
-                                        .totalExpenses(totalExpenses)
                                         .quantitiesByProduct(quantitiesByProduct)
                                         .quantitiesByCategory(quantitiesByCategory)
                                         .salesByProduct(salesByProduct)
                                         .salesByCategory(salesByCategory)
-                                        .totalProfit(totalProfit)
                                         .totalSold(totalSold)
-                                        .totalBought(totalBought)
                                         .build());
 
                         sectionWatch.stop();
@@ -656,8 +574,7 @@ public class ReportService {
                 // 1️⃣ Consultar todos los datos del rango total extendido
                 List<Ticket> allTickets = ticketRepository.findByBranchIdAndDateBetween(branchId, startDate,
                                 extendedEnd);
-                List<Expense> allExpenses = expenseRepository.findByBranchIdAndDateBetween(branchId, startDate,
-                                extendedEnd);
+             
 
                 List<ReportEntryDTO> reports = new ArrayList<>();
 
@@ -676,10 +593,7 @@ public class ReportService {
                                                         && !t.getDate().isAfter(finalEnd))
                                         .toList();
 
-                        List<Expense> expenses = allExpenses.stream()
-                                        .filter(e -> !e.getDate().isBefore(finalStart)
-                                                        && !e.getDate().isAfter(finalEnd))
-                                        .toList();
+                        
 
                         // 4️⃣ Calcular totales
                         List<Sale> sales = tickets.stream()
@@ -687,10 +601,7 @@ public class ReportService {
                                         .toList();
 
                         BigDecimal totalSales = ReportUtils.sumTicketsTotal(tickets);
-                        BigDecimal totalExpenses = ReportUtils.sumExpensesPaid(expenses);
-                        BigDecimal totalProfit = ReportUtils.calculateProfit(totalSales, totalExpenses);
                         BigDecimal totalSold = ReportUtils.sumSalesQuantity(sales);
-                        BigDecimal totalBought = ReportUtils.sumExpensesQuantity(expenses);
                         Map<String, BigDecimal> salesByProduct = ReportUtils.salesByProduct(sales);
                         Map<String, BigDecimal> quantitiesByProduct = ReportUtils.quantitiesByProduct(sales);
                         Map<String, BigDecimal> salesByCategory = ReportUtils.salesByCategory(sales);
@@ -703,10 +614,7 @@ public class ReportService {
                                         .endDate(finalEnd)
                                         .frequency("weekly_custom")
                                         .totalSales(totalSales)
-                                        .totalExpenses(totalExpenses)
-                                        .totalProfit(totalProfit)
                                         .totalSold(totalSold)
-                                        .totalBought(totalBought)
                                         .salesByProduct(salesByProduct)
                                         .quantitiesByProduct(quantitiesByProduct)
                                         .salesByCategory(salesByCategory)

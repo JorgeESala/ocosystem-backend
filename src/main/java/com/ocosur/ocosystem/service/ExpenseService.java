@@ -17,5 +17,8 @@ public class ExpenseService {
     public List<Expense> getExpenses() {
         return expenseRepository.findAll();
     }
+    public Expense saveExpense(Expense expense) {
+        return expenseRepository.save(expense);
+    }
     
 }

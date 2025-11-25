@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import com.ocosur.ocosystem.model.Expense;
 import com.ocosur.ocosystem.service.ExpenseService;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 
 @CrossOrigin
@@ -24,6 +26,11 @@ public class ExpenseController {
     @GetMapping
     public ResponseEntity<List<Expense>> getExpenses() {
         return new ResponseEntity<List<Expense>>(expenseService.getExpenses(), HttpStatus.OK);
+    }
+
+    @PostMapping()
+    public Expense saveExpense(@RequestBody Expense expense){
+        return expenseService.saveExpense(expense);
     }
     
 }

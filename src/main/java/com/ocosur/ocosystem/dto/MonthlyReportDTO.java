@@ -17,16 +17,11 @@ public class MonthlyReportDTO {
     private Integer branchId;
     private String yearMonth;
     private BigDecimal totalSales;
-    private BigDecimal totalExpenses;
-    private BigDecimal totalProfit;
-    private BigDecimal totalSold;
-    private BigDecimal totalBought;
     private BigDecimal eggs;
     private BigDecimal eggCartons;
     private BigDecimal eggsSale;
     // Desglose
     private Map<String, BigDecimal> salesByCategory;
-    private Map<String, BigDecimal> expensesByCategory;
     private List<WeeklyReportDTO> weeklyReports;
     private List<ProductReportDTO> productReports;
 }

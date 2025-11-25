@@ -22,10 +22,7 @@ public class MonthlyCategoryReportDTO {
 
     // Totales
     private BigDecimal totalSales;
-    private BigDecimal totalExpenses;
-    private BigDecimal totalProfit;
     private BigDecimal totalSold;   
-    private BigDecimal totalBought;
     private BigDecimal gut;
     private BigDecimal waste;
 
