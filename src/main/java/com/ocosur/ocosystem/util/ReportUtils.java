@@ -2,18 +2,15 @@ package com.ocosur.ocosystem.util;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAdjusters;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.ocosur.ocosystem.model.Expense;
 import com.ocosur.ocosystem.model.Sale;
 import com.ocosur.ocosystem.model.Ticket;
 
@@ -56,17 +53,9 @@ public class ReportUtils {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    public static BigDecimal sumExpensesPaid(Collection<Expense> expenses) {
-        return expenses.stream()
-                .map(Expense::getPaid)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
 
-    public static BigDecimal sumExpensesQuantity(Collection<Expense> expenses) {
-        return expenses.stream()
-                .map(e -> e.getQuantity() == null ? BigDecimal.ZERO : e.getQuantity())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
+
+
 
     public static BigDecimal sumSalesQuantity(Collection<Sale> sales) {
         return sales.stream()
@@ -108,12 +97,7 @@ public class ReportUtils {
                         Collectors.mapping(Sale::getQuantity, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
     }
 
-    public static Map<String, BigDecimal> expensesByCategory(Collection<Expense> expenses) {
-        return expenses.stream()
-                .collect(Collectors.groupingBy(
-                        e -> e.getCategory().getName(),
-                        Collectors.mapping(Expense::getPaid, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
-    }
+
 
     public static List<Sale> filterByCategoryId(Collection<Sale> sales, Integer categoryId) {
         return sales.stream()

@@ -20,12 +20,8 @@ public class DailyReportDTO {
 
     // Totales
     private BigDecimal totalSales;         
-    private BigDecimal totalExpenses;   
-    private BigDecimal totalProfit;        
     private BigDecimal totalSold;         
-    private BigDecimal totalBought;        
     private BigDecimal gut;               
-    private BigDecimal waste;
     private BigDecimal slaughteredChicken;              
     private BigDecimal eggQuantity;
     private BigDecimal eggCartonsQuantity;
@@ -35,5 +31,4 @@ public class DailyReportDTO {
     private Map<String, BigDecimal> salesByCategory;       
     private Map<String, BigDecimal> salesByProduct;      
     private Map<String, BigDecimal> quantitiesByProduct;   
-    private Map<String, BigDecimal> expensesByCategory;    
 }
