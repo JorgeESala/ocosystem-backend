@@ -35,4 +35,11 @@ public class BatchSaleService {
     public BatchSale updateBatchSale(BatchSale batchSale){
         return batchSaleRepository.save(batchSale);
     }
+    public List<BatchSale> findWithBatchBetweenDatesAndBranchIds(
+            java.time.LocalDate start,
+            java.time.LocalDate end,
+            List<Integer> branchIds){
+        return batchSaleRepository.findWithBatchBetweenDatesAndBranchIds(start, end, branchIds);
+    }
+
 }

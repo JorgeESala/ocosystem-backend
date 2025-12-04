@@ -1,8 +1,12 @@
 package com.ocosur.ocosystem.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.ocosur.ocosystem.dto.ExpenseDTO;
@@ -43,8 +47,10 @@ public class ExpenseService {
         return expenseRepository.save(expense);
     }
 
-    public List<Expense> getLatestExpensesByBranch() {
-        return List.of();
+    public List<Expense> getLatestExpensesByBranches(List<Integer> branchIds) {
+        Pageable limit = PageRequest.of(0, 10);
+
+        return expenseRepository.findByBranchIdInOrderByDateDesc(branchIds, limit).getContent();
     }
 
     public Expense updateExpense(Integer id, ExpenseDTO expenseDTO) {
@@ -58,6 +64,25 @@ public class ExpenseService {
         existing.setCategory(categoryRepository.findById(expenseDTO.categoryId()).orElseThrow());
 
         return expenseRepository.save(existing);
+    }
+
+    public BigDecimal sumBetweenByBranches(LocalDate start, LocalDate end, List<Integer> branchIds) {
+        return expenseRepository.sumBetweenByBranches(start, end, branchIds);
+    }
+
+    public List<Expense> getLatestExpenses() {
+        Pageable limit = PageRequest.of(0, 15);
+        return expenseRepository.findAllByOrderByDateDesc(limit).getContent();
+    }
+
+    public List<Expense> findByBranchesAndDateRange(
+            List<Integer> branchIds,
+            LocalDate start,
+            LocalDate end) {
+        return expenseRepository.findByBranchIdInAndDateBetweenOrderByDateDesc(
+                branchIds,
+                start,
+                end);
     }
 
 }

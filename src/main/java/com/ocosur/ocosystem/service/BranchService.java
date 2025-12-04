@@ -16,4 +16,7 @@ public class BranchService  {
     public List<Branch> getBranches(){
         return branchRepository.findAll();
     }
+    public List<Integer> getBranchIds(){
+        return branchRepository.findAllIds();
+    }
 }
