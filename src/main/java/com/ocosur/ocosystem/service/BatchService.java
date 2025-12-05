@@ -1,5 +1,6 @@
 package com.ocosur.ocosystem.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +53,23 @@ public class BatchService {
     }
     public Batch updateBatch (Batch batch) {
         return saveBatch(batch);
+    }
+    public Batch findById(Integer id){
+        return batchRepository.findById(id).orElseThrow(() -> new RuntimeException("Batch not found"));
+    }
+
+    public List<Batch> findByBranchesAndDateRange(
+            List<Integer> branchIds,
+            LocalDate start,
+            LocalDate end) {
+        return batchRepository.findByBranchIdInAndDateBetweenOrderByDateDesc(
+                branchIds,
+                start,
+                end);
+    }
+    public List<Batch> getLatestBatches() {
+        Pageable pageable = PageRequest.of(0, 15);
+        return batchRepository.findAllByOrderByDateDesc(pageable).getContent();
     }
 
 }

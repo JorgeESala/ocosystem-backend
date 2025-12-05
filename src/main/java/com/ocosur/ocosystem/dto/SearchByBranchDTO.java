@@ -5,7 +5,7 @@ import java.util.List;
 
 import lombok.Data;
 @Data
-public class SearchExpensesDTO {
+public class SearchByBranchDTO {
     private List<Integer> branchIds;
     private LocalDate start;
     private LocalDate end;

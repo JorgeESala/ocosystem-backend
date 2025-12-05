@@ -9,14 +9,19 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.ocosur.ocosystem.dto.BatchSaleDTO;
+import com.ocosur.ocosystem.dto.BatchSaleUpdateDTO;
+import com.ocosur.ocosystem.model.Batch;
 import com.ocosur.ocosystem.model.BatchSale;
+import com.ocosur.ocosystem.model.Employee;
+import com.ocosur.ocosystem.repository.EmployeeRepository;
 import com.ocosur.ocosystem.service.BatchSaleService;
+import com.ocosur.ocosystem.service.BatchService;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
-
 
 @RestController
 @CrossOrigin
@@ -25,22 +30,54 @@ public class BatchSaleController {
     @Autowired
     BatchSaleService batchSaleService;
 
+    @Autowired
+    BatchService batchService;
+    @Autowired
+    EmployeeRepository employeeService;
+
     @GetMapping()
     public ResponseEntity<List<BatchSale>> getBatchSales() {
         return new ResponseEntity<List<BatchSale>>(batchSaleService.getBatchSales(), HttpStatus.OK);
     }
+
     @GetMapping("/{batchId}")
     public ResponseEntity<List<BatchSale>> getBatchSaleByBatchId(@PathVariable Integer batchId) {
         return new ResponseEntity<List<BatchSale>>(batchSaleService.getBatchSalesByBatchId(batchId), HttpStatus.OK);
     }
+
     @PutMapping("/{id}")
-    public ResponseEntity<BatchSale> updateBatchSale(@PathVariable Integer id, @RequestBody BatchSale batchSale) {
-        batchSale.setId(id);
-        return new ResponseEntity<BatchSale>(batchSaleService.updateBatchSale(batchSale), HttpStatus.OK);
+    public ResponseEntity<?> update(
+            @PathVariable Integer id,
+            @RequestBody BatchSaleUpdateDTO dto) {
+        BatchSale sale = batchSaleService.findById(id);
+
+        // Mapping desde DTO
+        sale.setQuantitySold(dto.getQuantitySold());
+        sale.setKgTotal(dto.getKgTotal());
+        sale.setSaleTotal(dto.getSaleTotal());
+        sale.setKgGut(dto.getKgGut());
+        sale.setDate(dto.getDate());
+
+        // Relaciones
+        if (dto.getBatchId() != null) {
+            Batch batch = batchService.findById(dto.getBatchId());
+            sale.setBatch(batch);
+        }
+
+        if (dto.getEmployeeId() != null) {
+            Employee employee = employeeService.findById(dto.getEmployeeId())
+                    .orElseThrow();
+            sale.setEmployee(employee);
+        }
+
+        // Aquí sí puedes usar save()
+        batchSaleService.save(sale);
+
+        return ResponseEntity.ok(sale);
     }
-   
+
     @PostMapping()
-    public BatchSale createSale(@RequestBody BatchSaleDTO batchSale){
+    public BatchSale createSale(@RequestBody BatchSaleDTO batchSale) {
         return batchSaleService.createBatchSale(batchSale);
     }
 }

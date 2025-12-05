@@ -7,7 +7,6 @@ import lombok.Data;
 
 @Data
 public class BatchRequestDTO {
-    private Integer id;
     private Integer branchId;
     private BigDecimal kgTotal;
     private BigDecimal pricePerKg;

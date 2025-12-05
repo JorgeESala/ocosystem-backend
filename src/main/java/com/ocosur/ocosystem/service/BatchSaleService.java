@@ -35,6 +35,12 @@ public class BatchSaleService {
     public BatchSale updateBatchSale(BatchSale batchSale){
         return batchSaleRepository.save(batchSale);
     }
+    public void save(BatchSale batchSale){
+        batchSaleRepository.save(batchSale);
+    }
+    public BatchSale findById(Integer id){
+        return batchSaleRepository.findById(id).orElseThrow(() -> new RuntimeException("BatchSale not found"));
+    }
     public List<BatchSale> findWithBatchBetweenDatesAndBranchIds(
             java.time.LocalDate start,
             java.time.LocalDate end,

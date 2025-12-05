@@ -22,6 +22,9 @@ public class BatchSale {
     private Batch batch;
     private BigDecimal quantitySold;
     private BigDecimal kgTotal;
+    @ManyToOne
+    @JoinColumn(name = "employee_id")
+    private Employee employee;
     private BigDecimal saleTotal;
     private BigDecimal kgGut;
     private LocalDate date;

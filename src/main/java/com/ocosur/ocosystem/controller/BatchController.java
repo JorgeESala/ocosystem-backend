@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ocosur.ocosystem.dto.BatchRequestDTO;
+import com.ocosur.ocosystem.dto.SearchByBranchDTO;
 import com.ocosur.ocosystem.model.Batch;
 import com.ocosur.ocosystem.service.BatchService;
 
@@ -25,26 +26,34 @@ public class BatchController {
     @Autowired
     BatchService batchService;
 
-
     @GetMapping()
     public ResponseEntity<List<Batch>> getBatches() {
         return new ResponseEntity<List<Batch>>(batchService.getBatches(), HttpStatus.OK);
     }
 
     @GetMapping("/{branchId}/latest")
-    public ResponseEntity<List<Batch>> getLatestBatches(@PathVariable Integer branchId){
+    public ResponseEntity<List<Batch>> getLatestBatchesByBranch(@PathVariable Integer branchId) {
         return new ResponseEntity<List<Batch>>(batchService.getLast4BatchesByBranch(branchId), HttpStatus.OK);
     }
+    @GetMapping("/latest")
+    public ResponseEntity<List<Batch>> getLatestBatches() {
+        return new ResponseEntity<List<Batch>>(batchService.getLatestBatches(), HttpStatus.OK);
+    }
+
+    @PostMapping("/search")
+    public ResponseEntity<List<Batch>> searchBatches(@RequestBody SearchByBranchDTO searchByBranchDTO) {
+        return new ResponseEntity<List<Batch>>(batchService.findByBranchesAndDateRange(searchByBranchDTO.getBranchIds(),
+                searchByBranchDTO.getStart(), searchByBranchDTO.getEnd()), HttpStatus.OK);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<Batch> updateBatch(@PathVariable Integer id, @RequestBody Batch batch) {
         return new ResponseEntity<Batch>(batchService.updateBatch(batch), HttpStatus.OK);
     }
 
     @PostMapping()
-    public Batch saveUser(@RequestBody BatchRequestDTO batch){
+    public Batch saveUser(@RequestBody BatchRequestDTO batch) {
         return batchService.createBatch(batch);
     }
 
-
-    
 }

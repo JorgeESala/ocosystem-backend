@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ocosur.ocosystem.dto.ExpenseDTO;
-import com.ocosur.ocosystem.dto.SearchExpensesDTO;
+import com.ocosur.ocosystem.dto.SearchByBranchDTO;
 import com.ocosur.ocosystem.model.Expense;
 import com.ocosur.ocosystem.service.ExpenseService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,7 +37,7 @@ public class ExpenseController {
     }
 
     @PostMapping("/search")
-    public ResponseEntity<List<Expense>> getExpensesByBranches(@RequestBody SearchExpensesDTO searchDTO) {
+    public ResponseEntity<List<Expense>> getExpensesByBranches(@RequestBody SearchByBranchDTO searchDTO) {
         return new ResponseEntity<List<Expense>>(expenseService.findByBranchesAndDateRange(searchDTO.getBranchIds(),
                 searchDTO.getStart(), searchDTO.getEnd()), HttpStatus.OK);
     }
