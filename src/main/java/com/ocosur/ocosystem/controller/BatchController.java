@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ocosur.ocosystem.dto.BatchRequestDTO;
+import com.ocosur.ocosystem.dto.BatchUpdateDTO;
 import com.ocosur.ocosystem.dto.SearchByBranchDTO;
 import com.ocosur.ocosystem.model.Batch;
 import com.ocosur.ocosystem.service.BatchService;
@@ -35,6 +36,7 @@ public class BatchController {
     public ResponseEntity<List<Batch>> getLatestBatchesByBranch(@PathVariable Integer branchId) {
         return new ResponseEntity<List<Batch>>(batchService.getLast4BatchesByBranch(branchId), HttpStatus.OK);
     }
+
     @GetMapping("/latest")
     public ResponseEntity<List<Batch>> getLatestBatches() {
         return new ResponseEntity<List<Batch>>(batchService.getLatestBatches(), HttpStatus.OK);
@@ -47,8 +49,11 @@ public class BatchController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Batch> updateBatch(@PathVariable Integer id, @RequestBody Batch batch) {
-        return new ResponseEntity<Batch>(batchService.updateBatch(batch), HttpStatus.OK);
+    public ResponseEntity<Batch> updateBatch(
+            @PathVariable Integer id,
+            @RequestBody BatchUpdateDTO dto) {
+        Batch updated = batchService.updateBatch(id, dto);
+        return ResponseEntity.ok(updated);
     }
 
     @PostMapping()

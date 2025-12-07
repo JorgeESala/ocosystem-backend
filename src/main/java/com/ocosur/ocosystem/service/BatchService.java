@@ -9,10 +9,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.ocosur.ocosystem.dto.BatchRequestDTO;
+import com.ocosur.ocosystem.dto.BatchUpdateDTO;
 import com.ocosur.ocosystem.model.Batch;
 import com.ocosur.ocosystem.model.Branch;
 import com.ocosur.ocosystem.repository.BatchRepository;
 import com.ocosur.ocosystem.repository.BranchRepository;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class BatchService {
@@ -26,6 +29,41 @@ public class BatchService {
     }
 
     public Batch saveBatch(Batch batch) {
+        return batchRepository.save(batch);
+    }
+
+    @Transactional
+    public Batch updateBatch(Integer id, BatchUpdateDTO dto) {
+
+        // 1. Buscar el Batch
+        Batch batch = batchRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Batch no encontrado: " + id));
+
+        // 2. Si viene branchId → validar y asignar
+        if (dto.getBranchId() != null) {
+            Branch branch = branchRepository.findById(dto.getBranchId())
+                    .orElseThrow(() -> new RuntimeException("Sucursal no encontrada: " + dto.getBranchId()));
+            batch.setBranch(branch);
+        }
+
+        // 3. Actualizar solo campos enviados (patch-like)
+        if (dto.getKgTotal() != null) {
+            batch.setKgTotal(dto.getKgTotal());
+        }
+        if (dto.getPricePerKg() != null) {
+            batch.setPricePerKg(dto.getPricePerKg());
+        }
+        if (dto.getDate() != null) {
+            batch.setDate(dto.getDate());
+        }
+        if (dto.getProvider() != null) {
+            batch.setProvider(dto.getProvider());
+        }
+        if (dto.getChickenQuantity() != null) {
+            batch.setChickenQuantity(dto.getChickenQuantity());
+        }
+
+        // 4. Save opcional, Hibernate hace dirty-checking
         return batchRepository.save(batch);
     }
 
@@ -51,10 +89,12 @@ public class BatchService {
         Pageable limit = PageRequest.of(0, 4);
         return batchRepository.findByBranchOrderByDateDesc(branch, limit);
     }
-    public Batch updateBatch (Batch batch) {
+
+    public Batch updateBatch(Batch batch) {
         return saveBatch(batch);
     }
-    public Batch findById(Integer id){
+
+    public Batch findById(Integer id) {
         return batchRepository.findById(id).orElseThrow(() -> new RuntimeException("Batch not found"));
     }
 
@@ -67,6 +107,7 @@ public class BatchService {
                 start,
                 end);
     }
+
     public List<Batch> getLatestBatches() {
         Pageable pageable = PageRequest.of(0, 15);
         return batchRepository.findAllByOrderByDateDesc(pageable).getContent();
