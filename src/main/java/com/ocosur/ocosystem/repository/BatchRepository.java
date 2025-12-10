@@ -10,11 +10,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.ocosur.ocosystem.model.Batch;
 import com.ocosur.ocosystem.model.Branch;
 
-public interface BatchRepository extends JpaRepository<Batch, Integer> {
+public interface BatchRepository extends JpaRepository<Batch, Long> {
     List<Batch> findByBranchOrderByDateDesc(Branch branch, Pageable pageable);
 
     List<Batch> findByBranchIdInAndDateBetweenOrderByDateDesc(
-            List<Integer> branchIds,
+            List<Long> branchIds,
             LocalDate start,
             LocalDate end);
 

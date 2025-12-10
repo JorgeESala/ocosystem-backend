@@ -8,7 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import com.ocosur.ocosystem.dto.BatchSaleDTO;
+
+import com.ocosur.ocosystem.dto.BatchSaleCreateDTO;
+import com.ocosur.ocosystem.dto.BatchSaleResponseDTO;
 import com.ocosur.ocosystem.dto.BatchSaleUpdateDTO;
 import com.ocosur.ocosystem.model.Batch;
 import com.ocosur.ocosystem.model.BatchSale;
@@ -27,9 +29,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 @CrossOrigin
 @RequestMapping("/api/batchSales")
 public class BatchSaleController {
+
     @Autowired
     BatchSaleService batchSaleService;
-
     @Autowired
     BatchService batchService;
     @Autowired
@@ -41,13 +43,13 @@ public class BatchSaleController {
     }
 
     @GetMapping("/{batchId}")
-    public ResponseEntity<List<BatchSale>> getBatchSaleByBatchId(@PathVariable Integer batchId) {
+    public ResponseEntity<List<BatchSale>> getBatchSaleByBatchId(@PathVariable Long batchId) {
         return new ResponseEntity<List<BatchSale>>(batchSaleService.getBatchSalesByBatchId(batchId), HttpStatus.OK);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> update(
-            @PathVariable Integer id,
+            @PathVariable Long id,
             @RequestBody BatchSaleUpdateDTO dto) {
         BatchSale sale = batchSaleService.findById(id);
 
@@ -76,8 +78,12 @@ public class BatchSaleController {
         return ResponseEntity.ok(sale);
     }
 
-    @PostMapping()
-    public BatchSale createSale(@RequestBody BatchSaleDTO batchSale) {
-        return batchSaleService.createBatchSale(batchSale);
+    @PostMapping
+    public ResponseEntity<BatchSaleResponseDTO> create(
+            @RequestBody BatchSaleCreateDTO dto) {
+        BatchSaleResponseDTO response = batchSaleService.createBatchSale(dto);
+
+        return ResponseEntity.ok(response);
     }
+
 }

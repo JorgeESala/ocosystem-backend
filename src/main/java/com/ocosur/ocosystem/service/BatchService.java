@@ -33,7 +33,7 @@ public class BatchService {
     }
 
     @Transactional
-    public Batch updateBatch(Integer id, BatchUpdateDTO dto) {
+    public Batch updateBatch(Long id, BatchUpdateDTO dto) {
 
         // 1. Buscar el Batch
         Batch batch = batchRepository.findById(id)
@@ -94,12 +94,12 @@ public class BatchService {
         return saveBatch(batch);
     }
 
-    public Batch findById(Integer id) {
+    public Batch findById(Long id) {
         return batchRepository.findById(id).orElseThrow(() -> new RuntimeException("Batch not found"));
     }
 
     public List<Batch> findByBranchesAndDateRange(
-            List<Integer> branchIds,
+            List<Long> branchIds,
             LocalDate start,
             LocalDate end) {
         return batchRepository.findByBranchIdInAndDateBetweenOrderByDateDesc(

@@ -35,10 +35,10 @@ public class ProfitService {
     }
 
 
-    public ProfitReport calculateProfit(LocalDate start, LocalDate end, List<Integer> branchIds) {
+    public ProfitReport calculateProfit(LocalDate start, LocalDate end, List<Long> branchIds) {
 
         // si mandan null o lista vacía → calcula todas las sucursales
-        List<Integer> branchesToUse = (branchIds == null || branchIds.isEmpty())
+        List<Long> branchesToUse = (branchIds == null || branchIds.isEmpty())
                 ? branchRepository.findAllIds()
                 : branchIds;
 
@@ -48,14 +48,14 @@ public class ProfitService {
 
         BigDecimal totalSales = BigDecimal.ZERO;
         BigDecimal totalChickenCostsProRated = BigDecimal.ZERO;
-        Map<Integer, BatchCostDetail> batchDetailMap = new LinkedHashMap<>();
+        Map<Long, BatchCostDetail> batchDetailMap = new LinkedHashMap<>();
 
         for (BatchSale bs : sales) {
             Batch b = bs.getBatch();
             if (b == null)
                 continue;
 
-            Integer batchId = b.getId();
+            Long batchId = b.getId();
 
             // ingreso por venta
             BigDecimal saleTotal = bs.getSaleTotal();

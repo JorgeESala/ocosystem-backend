@@ -47,7 +47,7 @@ public class ExpenseService {
         return expenseRepository.save(expense);
     }
 
-    public List<Expense> getLatestExpensesByBranches(List<Integer> branchIds) {
+    public List<Expense> getLatestExpensesByBranches(List<Long> branchIds) {
         Pageable limit = PageRequest.of(0, 10);
 
         return expenseRepository.findByBranchIdInOrderByDateDesc(branchIds, limit).getContent();
@@ -66,7 +66,7 @@ public class ExpenseService {
         return expenseRepository.save(existing);
     }
 
-    public BigDecimal sumBetweenByBranches(LocalDate start, LocalDate end, List<Integer> branchIds) {
+    public BigDecimal sumBetweenByBranches(LocalDate start, LocalDate end, List<Long> branchIds) {
         return expenseRepository.sumBetweenByBranches(start, end, branchIds);
     }
 
@@ -76,7 +76,7 @@ public class ExpenseService {
     }
 
     public List<Expense> findByBranchesAndDateRange(
-            List<Integer> branchIds,
+            List<Long> branchIds,
             LocalDate start,
             LocalDate end) {
         return expenseRepository.findByBranchIdInAndDateBetweenOrderByDateDesc(
