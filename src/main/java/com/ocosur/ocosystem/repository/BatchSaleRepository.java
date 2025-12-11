@@ -9,8 +9,8 @@ import org.springframework.data.repository.query.Param;
 
 import com.ocosur.ocosystem.model.BatchSale;
 
-public interface BatchSaleRepository extends JpaRepository<BatchSale, Integer> {
-    public List<BatchSale> findByBatchId(Integer batchId);
+public interface BatchSaleRepository extends JpaRepository<BatchSale, Long> {
+    public List<BatchSale> findByBatchId(Long batchId);
 
     @Query("""
                 SELECT bs FROM BatchSale bs
@@ -22,7 +22,7 @@ public interface BatchSaleRepository extends JpaRepository<BatchSale, Integer> {
     List<BatchSale> findWithBatchBetweenDatesAndBranch(
             @Param("start") LocalDate start,
             @Param("end") LocalDate end,
-            @Param("branchId") Integer branchId);
+            @Param("branchId") Long branchId);
 
     @Query("""
             SELECT bs
@@ -33,6 +33,6 @@ public interface BatchSaleRepository extends JpaRepository<BatchSale, Integer> {
     List<BatchSale> findWithBatchBetweenDatesAndBranchIds(
             LocalDate start,
             LocalDate end,
-            List<Integer> branchIds);
+            List<Long> branchIds);
 
 }

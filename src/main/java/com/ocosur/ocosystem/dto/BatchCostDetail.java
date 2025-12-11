@@ -3,7 +3,7 @@ package com.ocosur.ocosystem.dto;
 import java.math.BigDecimal;
 
 public record BatchCostDetail(
-        Integer batchId,
+        Long batchId,
         String branchName,
         BigDecimal totalBatchCost,
         BigDecimal chickenQuantity,

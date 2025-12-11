@@ -16,14 +16,14 @@ import com.ocosur.ocosystem.model.Expense;
 public interface ExpenseRepository extends JpaRepository<Expense, Integer> {
 
     List<Expense> findByBranchIdAndDateBetween(
-            Integer branchId,
+            Long branchId,
             OffsetDateTime start,
             OffsetDateTime end);
 
-    Page<Expense> findByBranchIdInOrderByDateDesc(List<Integer> branchIds, Pageable pageable);
+    Page<Expense> findByBranchIdInOrderByDateDesc(List<Long> branchIds, Pageable pageable);
 
     List<Expense> findByBranchIdAndDateGreaterThanEqualAndDateLessThan(
-            Integer branchId,
+            Long branchId,
             OffsetDateTime start,
             OffsetDateTime end);
 
@@ -36,7 +36,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, Integer> {
     BigDecimal sumBetweenByBranch(
             @Param("start") LocalDate start,
             @Param("end") LocalDate end,
-            @Param("branchId") Integer branchId);
+            @Param("branchId") Long branchId);
 
     @Query("""
             SELECT COALESCE(SUM(e.amount), 0)
@@ -44,10 +44,10 @@ public interface ExpenseRepository extends JpaRepository<Expense, Integer> {
             WHERE e.date BETWEEN :start AND :end
             AND e.branch.id IN :branchIds
             """)
-    BigDecimal sumBetweenByBranches(LocalDate start, LocalDate end, List<Integer> branchIds);
+    BigDecimal sumBetweenByBranches(LocalDate start, LocalDate end, List<Long> branchIds);
 
     List<Expense> findByBranchIdInAndDateBetweenOrderByDateDesc(
-            List<Integer> branchIds,
+            List<Long> branchIds,
             LocalDate start,
             LocalDate end);
 

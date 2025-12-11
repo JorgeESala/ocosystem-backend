@@ -1,13 +1,15 @@
 package com.ocosur.ocosystem.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import lombok.Data;
 
 @Data
-public class BatchSaleUpdateDTO {
-    private Long id;              // ← requerido
-    private Long batchId;         // puedes permitir cambiar de batch o no, tú decides
+@AllArgsConstructor
+public class BatchSaleCreateDTO {
+
+    private Long batchId;
     private Long employeeId;
     private BigDecimal quantitySold;
     private BigDecimal kgTotal;
@@ -15,4 +17,3 @@ public class BatchSaleUpdateDTO {
     private BigDecimal kgGut;
     private LocalDate date;
 }
-

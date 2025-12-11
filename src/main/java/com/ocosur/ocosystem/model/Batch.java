@@ -17,7 +17,7 @@ import lombok.Data;
 public class Batch {
     @Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
     @ManyToOne
     @JoinColumn(name = "branch_id")
     private Branch branch;

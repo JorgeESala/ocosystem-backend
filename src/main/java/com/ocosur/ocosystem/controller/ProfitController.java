@@ -28,7 +28,7 @@ public class ProfitController {
     public ResponseEntity<ProfitReport> getProfit(
             @RequestParam("start") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
             @RequestParam("end")   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end,
-            @RequestParam("branchIds") List<Integer> branchIds
+            @RequestParam("branchIds") List<Long> branchIds
     ) {
         return ResponseEntity.ok(
                 profitService.calculateProfit(start, end, branchIds)

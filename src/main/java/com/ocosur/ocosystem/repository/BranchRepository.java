@@ -9,6 +9,6 @@ import com.ocosur.ocosystem.model.Branch;
 
 public interface BranchRepository extends JpaRepository<Branch, Integer> {
     @Query("SELECT b.id FROM Branch b")
-    List<Integer> findAllIds();
+    List<Long> findAllIds();
 
 }

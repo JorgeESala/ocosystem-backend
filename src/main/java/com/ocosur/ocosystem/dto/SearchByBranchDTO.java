@@ -6,7 +6,7 @@ import java.util.List;
 import lombok.Data;
 @Data
 public class SearchByBranchDTO {
-    private List<Integer> branchIds;
+    private List<Long> branchIds;
     private LocalDate start;
     private LocalDate end;
 }

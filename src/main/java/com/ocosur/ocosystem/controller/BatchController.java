@@ -50,7 +50,7 @@ public class BatchController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Batch> updateBatch(
-            @PathVariable Integer id,
+            @PathVariable Long id,
             @RequestBody BatchUpdateDTO dto) {
         Batch updated = batchService.updateBatch(id, dto);
         return ResponseEntity.ok(updated);
