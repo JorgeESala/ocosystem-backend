@@ -17,6 +17,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.ocosur.ocosystem.security.EmployeeUserDetailsService;
+import com.ocosur.ocosystem.security.JwtAuthEntryPoint;
 import com.ocosur.ocosystem.security.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Value;
 import java.util.Arrays;
@@ -28,14 +29,16 @@ public class SecurityConfig {
 
     private final EmployeeUserDetailsService userDetailsService;
     private final JwtAuthenticationFilter jwtAuthFilter;
+    private final JwtAuthEntryPoint jwtAuthEntryPoint;
 
     @Value("${cors.allowed-origins}")
     private String allowedOrigin;
 
-
-    public SecurityConfig(EmployeeUserDetailsService userDetailsService, JwtAuthenticationFilter jwtAuthFilter) {
+    public SecurityConfig(EmployeeUserDetailsService userDetailsService, JwtAuthenticationFilter jwtAuthFilter,
+            JwtAuthEntryPoint jwtAuthEntryPoint) {
         this.userDetailsService = userDetailsService;
         this.jwtAuthFilter = jwtAuthFilter;
+        this.jwtAuthEntryPoint = jwtAuthEntryPoint;
     }
 
     @Bean
@@ -71,7 +74,7 @@ public class SecurityConfig {
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); 
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 
@@ -80,6 +83,8 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(jwtAuthEntryPoint))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/actuator/**").permitAll()
                         .anyRequest().authenticated())
