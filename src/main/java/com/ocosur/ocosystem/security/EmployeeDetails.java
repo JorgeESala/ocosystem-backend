@@ -1,6 +1,8 @@
 package com.ocosur.ocosystem.security;
 
 import com.ocosur.ocosystem.model.Employee;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,13 +10,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
+@Getter
+@RequiredArgsConstructor
 public class EmployeeDetails implements UserDetails {
 
     private final Employee employee;
-
-    public EmployeeDetails(Employee employee) {
-        this.employee = employee;
-    }
 
     public Long getId() {
         return employee.getId();
@@ -54,4 +54,9 @@ public class EmployeeDetails implements UserDetails {
     public boolean isEnabled() {
         return employee.isActive();
     }
+
+    public Employee getEmployee() {
+        return employee;
+    }
+
 }
