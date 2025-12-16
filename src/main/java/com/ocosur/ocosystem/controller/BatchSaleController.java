@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ocosur.ocosystem.dto.BatchSaleCreateDTO;
 import com.ocosur.ocosystem.dto.BatchSaleResponseDTO;
+import com.ocosur.ocosystem.dto.BatchSaleSearchRequestDTO;
+import com.ocosur.ocosystem.dto.BatchSaleSearchResponseDTO;
 import com.ocosur.ocosystem.dto.BatchSaleUpdateDTO;
 import com.ocosur.ocosystem.model.Batch;
 import com.ocosur.ocosystem.model.BatchSale;
@@ -84,6 +86,13 @@ public class BatchSaleController {
         BatchSaleResponseDTO response = batchSaleService.createBatchSale(dto);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/search")
+    public ResponseEntity<BatchSaleSearchResponseDTO> searchByBranchAndDateRange(
+            @RequestBody BatchSaleSearchRequestDTO dto) {
+                return null;
+        
     }
 
 }
