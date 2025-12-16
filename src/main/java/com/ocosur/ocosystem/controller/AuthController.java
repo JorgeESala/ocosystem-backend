@@ -26,7 +26,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest req) {
-        var resp = svc.login(req.email(), req.password());
+        var resp = svc.login(req.email().toLowerCase().trim(), req.password());
         return ResponseEntity.ok(resp);
     }
 }

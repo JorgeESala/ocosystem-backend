@@ -41,7 +41,7 @@ public class MeController {
 
         Employee employee = principal.getEmployee();
         employee.setName(req.name());
-        employee.setEmail(req.email());
+        employee.setEmail(req.email().toLowerCase().trim());
         employee.setPasswordHash(
                 passwordEncoder.encode(req.newPassword()));
 
