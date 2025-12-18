@@ -48,7 +48,7 @@ public class ExpenseController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Expense> updateExpense(@PathVariable Integer id, @RequestBody ExpenseDTO expenseDTO) {
+    public ResponseEntity<Expense> updateExpense(@PathVariable Long id, @RequestBody ExpenseDTO expenseDTO) {
         return new ResponseEntity<Expense>(expenseService.updateExpense(id, expenseDTO), HttpStatus.OK);
     }
 

@@ -1,17 +1,24 @@
 package com.ocosur.ocosystem.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
-import com.ocosur.ocosystem.dto.BatchSaleCreateDTO;
-import com.ocosur.ocosystem.dto.BatchSaleResponseDTO;
+import com.ocosur.ocosystem.dto.BatchSaleCreateRequestDTO;
+import com.ocosur.ocosystem.dto.BatchSaleCreateResponseDTO;
+import com.ocosur.ocosystem.dto.BatchSaleSearchRequestDTO;
+import com.ocosur.ocosystem.dto.BatchSaleSearchResponseDTO;
 import com.ocosur.ocosystem.mapper.BatchSaleMapper;
 import com.ocosur.ocosystem.model.Batch;
 import com.ocosur.ocosystem.model.BatchSale;
 import com.ocosur.ocosystem.model.Employee;
+import com.ocosur.ocosystem.repository.BatchRepository;
 import com.ocosur.ocosystem.repository.BatchSaleRepository;
+import com.ocosur.ocosystem.repository.EmployeeRepository;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +28,8 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class BatchSaleService {
     private final BatchSaleRepository batchSaleRepository;
+    private final BatchRepository batchRepository;
+    private final EmployeeRepository employeeRepository;
     @PersistenceContext
     private EntityManager entityManager;
     private final BatchSaleMapper mapper;
@@ -34,20 +43,21 @@ public class BatchSaleService {
     }
 
     @Transactional
-    public BatchSaleResponseDTO createBatchSale(BatchSaleCreateDTO dto) {
+    public BatchSaleCreateResponseDTO createBatchSale(BatchSaleCreateRequestDTO dto) {
 
-        Batch batch = entityManager.getReference(
-                Batch.class,
-                dto.getBatchId());
+        Batch batch = batchRepository.findById(dto.getBatchId())
+                .orElseThrow(() -> new EntityNotFoundException("Batch not found"));
 
-        Employee employee = entityManager.getReference(
-                Employee.class,
-                dto.getEmployeeId());
+        Employee employee = employeeRepository.findById(dto.getEmployeeId())
+                .orElseThrow(() -> new EntityNotFoundException("Employee not found"));
 
-        BatchSale entity = mapper.toEntity(dto, batch, employee);
+        BatchSale sale = mapper.toEntity(dto);
+        sale.setBatch(batch);
+        sale.setEmployee(employee);
 
-        return mapper.toResponse(
-                batchSaleRepository.save(entity));
+        BatchSale saved = batchSaleRepository.save(sale);
+
+        return mapper.toCreateResponse(saved);
     }
 
     public BatchSale updateBatchSale(BatchSale batchSale) {
@@ -63,10 +73,41 @@ public class BatchSaleService {
     }
 
     public List<BatchSale> findWithBatchBetweenDatesAndBranchIds(
-            java.time.LocalDate start,
-            java.time.LocalDate end,
+            LocalDate start,
+            LocalDate end,
             List<Long> branchIds) {
         return batchSaleRepository.findWithBatchBetweenDatesAndBranchIds(start, end, branchIds);
+    }
+
+    
+    @Transactional
+    public BatchSaleSearchResponseDTO search(BatchSaleSearchRequestDTO request) {
+
+        List<BatchSale> sales =
+            batchSaleRepository.findWithBatchBetweenDatesAndBranchIds(
+                request.getStartDate(),
+                request.getEndDate(),
+                request.getBranchIds()
+            );
+
+        var items = sales.stream()
+            .map(mapper::toItemResponse)
+            .toList();
+
+        BigDecimal totalSales = sales.stream()
+            .map(BatchSale::getSaleTotal)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalKg = sales.stream()
+            .map(BatchSale::getKgTotal)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new BatchSaleSearchResponseDTO(
+            items,
+            totalSales,
+            totalKg,
+            (long) items.size()
+        );
     }
 
 }

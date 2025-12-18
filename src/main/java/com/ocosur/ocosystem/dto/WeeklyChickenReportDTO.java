@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 public record WeeklyChickenReportDTO(
-    Integer branchId,
+    Long branchId,
     OffsetDateTime  weekStart,
     BigDecimal chikenSales,
     BigDecimal chickenExpenses,

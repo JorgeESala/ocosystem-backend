@@ -9,8 +9,8 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class WeeklyCategoryReportDTO {
-    private Integer branchId;
-    private Integer categoryId;
+    private Long branchId;
+    private Long categoryId;
     private OffsetDateTime weekStart;
     private BigDecimal sales;
     private BigDecimal expenses;

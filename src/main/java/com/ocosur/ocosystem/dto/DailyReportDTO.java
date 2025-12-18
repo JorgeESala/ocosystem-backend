@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DailyReportDTO {
 
-    private Integer branchId;              
+    private Long branchId;              
     private OffsetDateTime date;                  
 
     // Totales

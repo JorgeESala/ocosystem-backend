@@ -53,7 +53,7 @@ public class ExpenseService {
         return expenseRepository.findByBranchIdInOrderByDateDesc(branchIds, limit).getContent();
     }
 
-    public Expense updateExpense(Integer id, ExpenseDTO expenseDTO) {
+    public Expense updateExpense(Long id, ExpenseDTO expenseDTO) {
         Expense existing = expenseRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Expense not found with id: " + id));
 

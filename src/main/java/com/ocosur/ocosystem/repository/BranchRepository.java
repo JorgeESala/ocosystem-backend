@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import com.ocosur.ocosystem.model.Branch;
 
-public interface BranchRepository extends JpaRepository<Branch, Integer> {
+public interface BranchRepository extends JpaRepository<Branch, Long> {
     @Query("SELECT b.id FROM Branch b")
     List<Long> findAllIds();
 

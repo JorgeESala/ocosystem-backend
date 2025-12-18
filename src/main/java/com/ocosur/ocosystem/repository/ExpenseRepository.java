@@ -13,7 +13,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.ocosur.ocosystem.model.Expense;
 
-public interface ExpenseRepository extends JpaRepository<Expense, Integer> {
+public interface ExpenseRepository extends JpaRepository<Expense, Long> {
 
     List<Expense> findByBranchIdAndDateBetween(
             Long branchId,

@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MonthlyCategoryReportDTO {
-    private Integer branchId;
+    private Long branchId;
     private YearMonth yearMonth; // formato YYYY-MM
     private Integer categoryId;
 

@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MonthlyReportDTO {
-    private Integer branchId;
+    private Long branchId;
     private String yearMonth;
     private BigDecimal totalSales;
     private BigDecimal eggs;

@@ -7,15 +7,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.ocosur.ocosystem.model.Ticket;
 
-public interface TicketRepository extends JpaRepository<Ticket, Integer> {
+public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
     List<Ticket> findByBranchIdAndDateBetween(
-            Integer branchId,
+            Long branchId,
             OffsetDateTime start,
             OffsetDateTime end);
 
     List<Ticket> findByBranchIdAndDateGreaterThanEqualAndDateLessThan(
-            Integer branchId,
+            Long branchId,
             OffsetDateTime start,
             OffsetDateTime end);
 

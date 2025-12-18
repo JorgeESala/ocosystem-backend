@@ -126,7 +126,7 @@ public class ReportService {
 
         }
 
-        public DailyReportDTO getDailyReport(Integer branchId, OffsetDateTime date) {
+        public DailyReportDTO getDailyReport(Long branchId, OffsetDateTime date) {
                 OffsetDateTime startLocal = ReportUtils.getStartOfDay(date);
                 OffsetDateTime endLocal = startLocal.plusDays(1); // 👈 fin exclusivo
 
@@ -173,7 +173,7 @@ public class ReportService {
                         );
         }
 
-        public WeeklyReportDTO getWeeklyReport(Integer branchId, OffsetDateTime date, Boolean includeDays) {
+        public WeeklyReportDTO getWeeklyReport(Long branchId, OffsetDateTime date, Boolean includeDays) {
                 // 📅 1️⃣ Calcular semana local completa (-05)
                 OffsetDateTime startLocal = ReportUtils.getStartOfWeek(date);
                 OffsetDateTime endLocal = startLocal.plusDays(7); // 👈 fin exclusivo
@@ -234,7 +234,7 @@ public class ReportService {
                                 productReports);
         }
 
-        public WeeklyReportDTO getWeeklyReportByCategory(Integer branchId, Integer categoryId, OffsetDateTime date,
+        public WeeklyReportDTO getWeeklyReportByCategory(Long branchId, Integer categoryId, OffsetDateTime date,
                         Boolean includeDays) {
                 OffsetDateTime start = getWeekStart(date);
                 OffsetDateTime end = getEndOfWeek(start);
@@ -312,7 +312,7 @@ public class ReportService {
                                 dailyReports, null);
         }
 
-        public MonthlyCategoryReportDTO getMonthlyReportByCategoryWithWeeks(Integer branchId, Integer categoryId,
+        public MonthlyCategoryReportDTO getMonthlyReportByCategoryWithWeeks(Long branchId, Integer categoryId,
                         int year,
                         int month) {
                 ZoneId zone = ZoneId.of("America/Mexico_City");
@@ -402,7 +402,7 @@ public class ReportService {
                                 weeklyReports);
         }
 
-        public MonthlyReportDTO getMonthlyReport(Integer branchId, int year, int month) {
+        public MonthlyReportDTO getMonthlyReport(Long branchId, int year, int month) {
                 YearMonth ym = YearMonth.of(year, month);
                 final Boolean INCLUDE_DAYS = false;
                 OffsetDateTime start = ym.atDay(1).atStartOfDay().atOffset(ZoneOffset.ofHours(-5));
@@ -460,7 +460,7 @@ public class ReportService {
                                 productReports);
         }
 
-        public List<ReportEntryDTO> getReports(Integer branchId, OffsetDateTime startDate, OffsetDateTime endDate,
+        public List<ReportEntryDTO> getReports(Long branchId, OffsetDateTime startDate, OffsetDateTime endDate,
                         String frequency) {
                 StopWatch globalWatch = new StopWatch("Report generation");
                 globalWatch.start("Total");
@@ -556,7 +556,7 @@ public class ReportService {
                 return reports;
         }
 
-        public List<ReportEntryDTO> getReportsByCustomWeeks(Integer branchId, OffsetDateTime startDate,
+        public List<ReportEntryDTO> getReportsByCustomWeeks(Long branchId, OffsetDateTime startDate,
                         OffsetDateTime endDate) {
 
                 // 🔹 Calcular cuántos días hay entre start y end
@@ -629,7 +629,7 @@ public class ReportService {
         }
 
         public List<ReportEntryDTO> getReportsCustom(
-                        List<Integer> branchIds,
+                        List<Long> branchIds,
                         OffsetDateTime startDate,
                         OffsetDateTime endDate,
                         String frequency,
@@ -642,7 +642,7 @@ public class ReportService {
 
                 // ⭐ Lógica de Comparación Interna (compareSelf = true)
                 if (compareSelf && branchIds.size() == 1) {
-                        Integer branchId = branchIds.get(0);
+                        Long branchId = branchIds.get(0);
 
                         List<OffsetDateTime> startPoints = switch (frequency) {
                                 case "weekly" -> ReportUtils.getStartOfWeeks(startDate, endDate);
@@ -683,7 +683,7 @@ public class ReportService {
                         return combinedReports;
                 }
 
-                for (Integer branchId : branchIds) {
+                for (Long branchId : branchIds) {
 
                         List<ReportEntryDTO> currentReports = generateReports(branchId, startDate, endDate, frequency,
                                         metric, categories);
@@ -706,7 +706,7 @@ public class ReportService {
         }
 
         private List<ReportEntryDTO> generateReports(
-                        Integer branchId,
+                        Long branchId,
                         OffsetDateTime startDate,
                         OffsetDateTime endDate,
                         String frequency,
@@ -841,8 +841,8 @@ public class ReportService {
                 DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("dd MMM", Locale.forLanguageTag("es-MX"));
                 DateTimeFormatter weekStartFormatter = DateTimeFormatter.ofPattern("dd MMM",
                                 Locale.forLanguageTag("es-MX"));
-                List<Integer> branchIds = reports.stream().map(ReportEntryDTO::getBranchId).distinct().toList();
-                Map<Integer, String> branchNames = branchRepository.findAllById(branchIds).stream()
+                List<Long> branchIds = reports.stream().map(ReportEntryDTO::getBranchId).distinct().toList();
+                Map<Long, String> branchNames = branchRepository.findAllById(branchIds).stream()
                                 .collect(Collectors.toMap(Branch::getId, Branch::getName));
 
                 for (ReportEntryDTO r : reports) {

@@ -1,8 +1,8 @@
 package com.ocosur.ocosystem.mapper;
 
-import com.ocosur.ocosystem.dto.BatchSaleCreateDTO;
-import com.ocosur.ocosystem.dto.BatchSaleResponseDTO;
-import com.ocosur.ocosystem.model.Batch;
+import com.ocosur.ocosystem.dto.BatchSaleCreateRequestDTO;
+import com.ocosur.ocosystem.dto.BatchSaleCreateResponseDTO;
+import com.ocosur.ocosystem.dto.BatchSaleItemResponseDTO;
 import com.ocosur.ocosystem.model.BatchSale;
 import com.ocosur.ocosystem.model.Employee;
 
@@ -11,14 +11,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class BatchSaleMapper {
 
-    public BatchSale toEntity(
-            BatchSaleCreateDTO dto,
-            Batch batch,
-            Employee employee) {
+    public BatchSale toEntity(BatchSaleCreateRequestDTO dto) {
         BatchSale sale = new BatchSale();
 
-        sale.setBatch(batch);
-        sale.setEmployee(employee);
         sale.setQuantitySold(dto.getQuantitySold());
         sale.setKgTotal(dto.getKgTotal());
         sale.setSaleTotal(dto.getSaleTotal());
@@ -28,8 +23,8 @@ public class BatchSaleMapper {
         return sale;
     }
 
-    public BatchSaleResponseDTO toResponse(BatchSale sale) {
-        return new BatchSaleResponseDTO(
+    public BatchSaleCreateResponseDTO toCreateResponse(BatchSale sale) {
+        return new BatchSaleCreateResponseDTO(
                 sale.getId(),
                 sale.getBatch().getId(),
                 sale.getEmployee().getId(),
@@ -39,4 +34,21 @@ public class BatchSaleMapper {
                 sale.getKgGut(),
                 sale.getDate());
     }
+
+    public BatchSaleItemResponseDTO toItemResponse(BatchSale sale) {
+
+        Employee emp = sale.getEmployee();
+
+        return new BatchSaleItemResponseDTO(
+                sale.getId(),
+                sale.getBatch().getId(),
+                sale.getQuantitySold(),
+                sale.getKgTotal(),
+                sale.getKgGut(),
+                sale.getSaleTotal(),
+                emp != null ? emp.getId() : null,
+                emp != null ? emp.getName() : null,
+                sale.getDate());
+    }
+
 }

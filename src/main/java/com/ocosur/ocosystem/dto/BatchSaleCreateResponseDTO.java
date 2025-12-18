@@ -7,7 +7,7 @@ import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
-public class BatchSaleResponseDTO {
+public class BatchSaleCreateResponseDTO {
 
     private Long id;
     private Long batchId;

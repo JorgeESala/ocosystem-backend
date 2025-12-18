@@ -6,7 +6,6 @@ import java.time.LocalDate;
 public record BatchSaleItemResponseDTO(
     Long id,
     Long batchId,
-    String batchName,
     BigDecimal quantitySold,
     BigDecimal kgTotal,
     BigDecimal kgGut,

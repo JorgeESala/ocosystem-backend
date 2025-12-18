@@ -11,7 +11,7 @@ import java.util.Map;
 @Builder
 public class ReportEntryDTO {
 
-    private Integer branchId;
+    private Long branchId;
     private String branchName;
     private Integer year;
     private Integer weekIndex;

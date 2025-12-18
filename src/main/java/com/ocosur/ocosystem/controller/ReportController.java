@@ -33,14 +33,14 @@ public class ReportController {
 
     @GetMapping("/weekly")
     public WeeklyReportDTO getWeeklyCalendarReport(
-            @RequestParam Integer branchId,
+            @RequestParam Long branchId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime date) {
         return reportService.getWeeklyReport(branchId, date, true);
     }
 
     @GetMapping("/weekly-category")
     public WeeklyReportDTO getWeeklyCategoryReport(
-            @RequestParam Integer branchId,
+            @RequestParam Long branchId,
             @RequestParam Integer categoryId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime date) {
 
@@ -49,7 +49,7 @@ public class ReportController {
 
     @GetMapping("/monthly")
     public MonthlyReportDTO getMonthlyReport(
-            @RequestParam Integer branchId,
+            @RequestParam Long branchId,
             @RequestParam int year,
             @RequestParam int month) {
         return reportService.getMonthlyReport(branchId, year, month);
@@ -57,7 +57,7 @@ public class ReportController {
 
     @GetMapping("/monthly-category")
     public MonthlyCategoryReportDTO getMonthlyCategoryReport(
-            @RequestParam Integer branchId,
+            @RequestParam Long branchId,
             @RequestParam Integer categoryId,
             @RequestParam Integer year,
             @RequestParam Integer month) {
@@ -67,7 +67,7 @@ public class ReportController {
 
     @GetMapping("/daily")
     public ResponseEntity<DailyReportDTO> getDailyReport(
-            @RequestParam Integer branchId,
+            @RequestParam Long branchId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         // Convertir LocalDate a OffsetDateTime
         OffsetDateTime dateTime = date.atStartOfDay().atOffset(ZoneOffset.UTC);
@@ -78,7 +78,7 @@ public class ReportController {
 
     @GetMapping
     public ResponseEntity<?> getReports(
-            @RequestParam List<Integer> branchId,
+            @RequestParam List<Long> branchId,
             @RequestParam String startDate,
             @RequestParam String endDate,
             @RequestParam String metric,

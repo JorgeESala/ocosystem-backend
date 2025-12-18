@@ -1,6 +1,7 @@
 package com.ocosur.ocosystem.dto;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
@@ -10,7 +11,7 @@ import lombok.Data;
 public class BatchSaleSearchRequestDTO {
 
     @NotNull
-    private Long branchId;
+    private List<Long> branchIds;
 
     @NotNull
     private LocalDate startDate;

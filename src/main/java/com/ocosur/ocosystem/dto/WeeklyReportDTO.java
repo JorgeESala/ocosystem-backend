@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class WeeklyReportDTO {
-    private Integer branchId;
+    private Long branchId;
     private OffsetDateTime weekStart;
     private BigDecimal totalSales;
     private BigDecimal totalSold;

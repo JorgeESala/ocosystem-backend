@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.ocosur.ocosystem.model.Sale;
 
 public interface SaleRepository extends JpaRepository<Sale, Integer>{
-    List<Sale> findByTicketBranchIdAndTicketDateBetween(Integer branchId,
+    List<Sale> findByTicketBranchIdAndTicketDateBetween(Long branchId,
             OffsetDateTime start,
             OffsetDateTime end);
 }

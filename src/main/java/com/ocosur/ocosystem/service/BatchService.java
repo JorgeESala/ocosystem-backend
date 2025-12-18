@@ -1,5 +1,6 @@
 package com.ocosur.ocosystem.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -8,21 +9,27 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import com.ocosur.ocosystem.dto.BatchItemResponseDTO;
 import com.ocosur.ocosystem.dto.BatchRequestDTO;
+import com.ocosur.ocosystem.dto.BatchSearchRequestDTO;
+import com.ocosur.ocosystem.dto.BatchSearchResponseDTO;
 import com.ocosur.ocosystem.dto.BatchUpdateDTO;
+import com.ocosur.ocosystem.mapper.BatchMapper;
 import com.ocosur.ocosystem.model.Batch;
 import com.ocosur.ocosystem.model.Branch;
 import com.ocosur.ocosystem.repository.BatchRepository;
 import com.ocosur.ocosystem.repository.BranchRepository;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
+@Transactional
 public class BatchService {
-    @Autowired
-    public BatchRepository batchRepository;
-    @Autowired
-    public BranchRepository branchRepository;
+    private final BatchRepository batchRepository;
+    private final BranchRepository branchRepository;
+    private final BatchMapper mapper;
 
     public List<Batch> getBatches() {
         return batchRepository.findAll();
@@ -82,7 +89,21 @@ public class BatchService {
         return batchRepository.save(batch);
     }
 
-    public List<Batch> getLast4BatchesByBranch(Integer branchId) {
+    public List<BatchItemResponseDTO> searchByBranchAndDateRange(BatchSearchRequestDTO request) {
+
+        List<Batch> batches = batchRepository.findBetweenDatesAndBranchIds(
+                request.startDate(),
+                request.endDate(),
+                request.branchIds());
+
+        var items = batches.stream()
+                .map(mapper::toItemResponse)
+                .toList();
+
+        return items;
+    }
+
+    public List<Batch> getLast4BatchesByBranch(Long branchId) {
         Branch branch = branchRepository.findById(branchId)
                 .orElseThrow(() -> new RuntimeException("Sucursal no encontrada"));
 

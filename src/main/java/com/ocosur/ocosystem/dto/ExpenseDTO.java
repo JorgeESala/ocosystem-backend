@@ -6,7 +6,7 @@ import java.time.LocalDate;
 public record ExpenseDTO (
     String reason,
     BigDecimal amount,
-    Integer branchId,
+    Long branchId,
     LocalDate date,
-    Integer categoryId
+    Long categoryId
 ){}
