@@ -27,6 +27,7 @@ public interface BatchRepository extends JpaRepository<Batch, Long> {
                 join fetch b.branch br
                 where b.date between :startDate and :endDate
                   and br.id in :branchIds
+                  ORDER BY b.date DESC
             """)
     List<Batch> findBetweenDatesAndBranchIds(
             LocalDate startDate,
