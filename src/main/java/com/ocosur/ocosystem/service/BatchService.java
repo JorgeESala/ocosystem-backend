@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -129,9 +128,13 @@ public class BatchService {
                 end);
     }
 
-    public List<Batch> getLatestBatches() {
+    public List<BatchItemResponseDTO> getLatestBatches() {
         Pageable pageable = PageRequest.of(0, 15);
-        return batchRepository.findAllByOrderByDateDesc(pageable).getContent();
+        List<Batch> batches = batchRepository.findAllByOrderByDateDesc(pageable).getContent();
+        var items = batches.stream()
+                .map(mapper::toItemResponse)
+                .toList();
+        return items;
     }
 
 }

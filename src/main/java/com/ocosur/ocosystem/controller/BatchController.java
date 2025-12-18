@@ -39,8 +39,8 @@ public class BatchController {
     }
 
     @GetMapping("/latest")
-    public ResponseEntity<List<Batch>> getLatestBatches() {
-        return new ResponseEntity<List<Batch>>(batchService.getLatestBatches(), HttpStatus.OK);
+    public List<BatchItemResponseDTO> getLatestBatches() {
+        return batchService.getLatestBatches();
     }
 
     @PostMapping("/search")
