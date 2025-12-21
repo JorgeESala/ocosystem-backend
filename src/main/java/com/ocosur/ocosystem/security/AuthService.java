@@ -27,13 +27,13 @@ public class AuthService {
     }
 
     public AuthResponse register(RegisterRequest req) {
-        if (repo.existsByEmail(req.email())) {
+        if (repo.existsByEmail(req.email().toLowerCase().trim())) {
             throw new IllegalArgumentException("Email already in use");
         }
 
         Employee e = Employee.builder()
                 .name(req.name())
-                .email(req.email())
+                .email(req.email().toLowerCase().trim())
                 .passwordHash(encoder.encode(req.password()))
                 .role("USER")
                 .active(true)
