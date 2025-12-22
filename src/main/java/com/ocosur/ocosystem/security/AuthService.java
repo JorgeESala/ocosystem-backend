@@ -45,7 +45,6 @@ public class AuthService {
     }
 
     public AuthResponse login(String email, String password) {
-        // esto lanzará BadCredentialsException si no coincide
         authManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
         Employee e = repo.findByEmail(email).orElseThrow();
         String token = jwtService.generateToken(e.getEmail(), e.getRole());

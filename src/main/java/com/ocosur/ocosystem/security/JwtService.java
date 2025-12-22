@@ -13,7 +13,7 @@ import java.util.Date;
 public class JwtService {
 
     @Value("${app.jwt.secret}")
-    private String jwtSecretBase64; // base64
+    private String jwtSecretBase64; 
 
     @Value("${app.jwt.expiration-ms:604800000}")
     private long jwtExpirationMs;
