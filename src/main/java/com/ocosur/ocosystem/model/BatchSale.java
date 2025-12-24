@@ -3,6 +3,8 @@ package com.ocosur.ocosystem.model;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import com.ocosur.ocosystem.core.employee.model.Employee;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

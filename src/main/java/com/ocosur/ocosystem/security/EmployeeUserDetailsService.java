@@ -1,7 +1,8 @@
 package com.ocosur.ocosystem.security;
 
-import com.ocosur.ocosystem.model.Employee;
-import com.ocosur.ocosystem.repository.EmployeeRepository;
+import com.ocosur.ocosystem.core.employee.model.Employee;
+import com.ocosur.ocosystem.core.employee.repository.EmployeeRepository;
+
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

@@ -1,9 +1,9 @@
 package com.ocosur.ocosystem.security;
 
+import com.ocosur.ocosystem.core.employee.model.Employee;
+import com.ocosur.ocosystem.core.employee.repository.EmployeeRepository;
 import com.ocosur.ocosystem.dto.AuthResponse;
 import com.ocosur.ocosystem.dto.RegisterRequest;
-import com.ocosur.ocosystem.model.Employee;
-import com.ocosur.ocosystem.repository.EmployeeRepository;
 import com.ocosur.ocosystem.security.JwtService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

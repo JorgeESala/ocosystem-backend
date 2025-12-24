@@ -1,10 +1,10 @@
 package com.ocosur.ocosystem.mapper;
 
+import com.ocosur.ocosystem.core.employee.model.Employee;
 import com.ocosur.ocosystem.dto.BatchSaleCreateRequestDTO;
 import com.ocosur.ocosystem.dto.BatchSaleCreateResponseDTO;
 import com.ocosur.ocosystem.dto.BatchSaleItemResponseDTO;
 import com.ocosur.ocosystem.model.BatchSale;
-import com.ocosur.ocosystem.model.Employee;
 
 import org.springframework.stereotype.Component;
 

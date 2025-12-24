@@ -1,6 +1,5 @@
 package com.ocosur.ocosystem.service;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Service;
 import com.ocosur.ocosystem.dto.BatchItemResponseDTO;
 import com.ocosur.ocosystem.dto.BatchRequestDTO;
 import com.ocosur.ocosystem.dto.BatchSearchRequestDTO;
-import com.ocosur.ocosystem.dto.BatchSearchResponseDTO;
 import com.ocosur.ocosystem.dto.BatchUpdateDTO;
 import com.ocosur.ocosystem.mapper.BatchMapper;
 import com.ocosur.ocosystem.model.Batch;

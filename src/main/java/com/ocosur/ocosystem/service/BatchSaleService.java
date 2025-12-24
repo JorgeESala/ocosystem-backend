@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
+import com.ocosur.ocosystem.core.employee.model.Employee;
+import com.ocosur.ocosystem.core.employee.repository.EmployeeRepository;
 import com.ocosur.ocosystem.dto.BatchSaleCreateRequestDTO;
 import com.ocosur.ocosystem.dto.BatchSaleCreateResponseDTO;
 import com.ocosur.ocosystem.dto.BatchSaleSearchRequestDTO;
@@ -12,10 +14,8 @@ import com.ocosur.ocosystem.dto.BatchSaleSearchResponseDTO;
 import com.ocosur.ocosystem.mapper.BatchSaleMapper;
 import com.ocosur.ocosystem.model.Batch;
 import com.ocosur.ocosystem.model.BatchSale;
-import com.ocosur.ocosystem.model.Employee;
 import com.ocosur.ocosystem.repository.BatchRepository;
 import com.ocosur.ocosystem.repository.BatchSaleRepository;
-import com.ocosur.ocosystem.repository.EmployeeRepository;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;

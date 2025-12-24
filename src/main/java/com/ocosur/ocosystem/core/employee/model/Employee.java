@@ -1,4 +1,6 @@
-package com.ocosur.ocosystem.model;
+package com.ocosur.ocosystem.core.employee.model;
+
+import com.ocosur.ocosystem.core.employee.enums.JobPosition;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -25,6 +27,10 @@ public class Employee {
     @Column(nullable = false)
     private String role = "USER";
 
+
     @Column(nullable = false)
     private boolean active = true;
+
+    @Enumerated(EnumType.STRING)
+    private JobPosition position;
 }

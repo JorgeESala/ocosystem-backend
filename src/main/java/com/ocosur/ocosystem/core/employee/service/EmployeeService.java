@@ -1,0 +1,44 @@
+package com.ocosur.ocosystem.core.employee.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.ocosur.ocosystem.core.employee.dto.EmployeeResponseDTO;
+import com.ocosur.ocosystem.core.employee.enums.JobPosition;
+import com.ocosur.ocosystem.core.employee.mapper.EmployeeMapper;
+import com.ocosur.ocosystem.core.employee.model.Employee;
+import com.ocosur.ocosystem.core.employee.repository.EmployeeRepository;
+
+import lombok.AllArgsConstructor;
+
+@Service
+@AllArgsConstructor
+public class EmployeeService {
+    private final EmployeeRepository employeeRepository;
+
+    EmployeeMapper employeeMapper;;
+
+    public List<Employee> getAllEmployees() {
+        return employeeRepository.findAll();
+    }
+
+    public List<Employee> getByPosition(JobPosition position) {
+        return employeeRepository.findByPosition(position);
+    }
+
+    public List<EmployeeResponseDTO> getEmployees(JobPosition position) {
+        List<Employee> employees;
+
+        if (position != null) {
+            employees = employeeRepository.findByPosition(position);
+        } else {
+            employees = employeeRepository.findAll();
+        }
+
+        return employees.stream()
+                .map(employeeMapper::toResponse)
+                .toList();
+    }
+
+}

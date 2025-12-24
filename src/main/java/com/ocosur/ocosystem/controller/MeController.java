@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ocosur.ocosystem.core.employee.model.Employee;
+import com.ocosur.ocosystem.core.employee.repository.EmployeeRepository;
 import com.ocosur.ocosystem.dto.ChangeCredentialsRequest;
 import com.ocosur.ocosystem.dto.MeResponse;
-import com.ocosur.ocosystem.model.Employee;
-import com.ocosur.ocosystem.repository.EmployeeRepository;
 import com.ocosur.ocosystem.security.EmployeeDetails;
 
 import lombok.RequiredArgsConstructor;
