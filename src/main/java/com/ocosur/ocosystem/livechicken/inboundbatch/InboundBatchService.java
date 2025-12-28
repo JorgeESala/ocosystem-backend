@@ -97,7 +97,7 @@ public class InboundBatchService {
         batch.setSupplier(supplier);
         batch.setDate(dto.getDate());
         batch.setRealWeight(dto.getRealWeight());
-        batch.setRealWeight(dto.getDeclaredWeight());
+        batch.setDeclaredWeight(dto.getDeclaredWeight());
         batch.setChickenQuantity(dto.getChickenQuantity());
         batch.setPricePerKg(dto.getPricePerKg());
 

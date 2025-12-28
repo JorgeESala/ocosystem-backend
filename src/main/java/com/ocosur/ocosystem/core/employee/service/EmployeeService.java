@@ -23,8 +23,12 @@ public class EmployeeService {
         return employeeRepository.findAll();
     }
 
-    public List<Employee> getByPosition(JobPosition position) {
-        return employeeRepository.findByPosition(position);
+    public List<EmployeeResponseDTO> getByPosition(JobPosition position) {
+        List<Employee> employees = employeeRepository.findByPosition(position);
+        
+        return employees.stream()
+                .map(employeeMapper::toResponse)
+                .toList();
     }
 
     public List<EmployeeResponseDTO> getEmployees(JobPosition position) {
