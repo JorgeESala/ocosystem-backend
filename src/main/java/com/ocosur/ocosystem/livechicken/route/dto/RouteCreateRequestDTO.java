@@ -1,0 +1,14 @@
+package com.ocosur.ocosystem.livechicken.route.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class RouteCreateRequestDTO {
+    private String name;
+}

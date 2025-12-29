@@ -3,8 +3,6 @@ package com.ocosur.ocosystem.livechicken.batchsale.dto;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import com.ocosur.ocosystem.livechicken.inboundbatch.InboundBatch;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,4 +22,6 @@ public class InboundBatchSaleResponseDTO {
     private String employeeName;
     private BigDecimal saleTotal;
     private LocalDate date;
+    private Long routeId;
+    private String routeName;
 }

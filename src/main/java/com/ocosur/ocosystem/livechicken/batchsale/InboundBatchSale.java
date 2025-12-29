@@ -5,6 +5,7 @@ import java.time.LocalDate;
 
 import com.ocosur.ocosystem.core.employee.model.Employee;
 import com.ocosur.ocosystem.livechicken.inboundbatch.InboundBatch;
+import com.ocosur.ocosystem.livechicken.route.Route;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -39,4 +40,7 @@ public class InboundBatchSale {
     private Employee employee;
     private BigDecimal saleTotal;
     private LocalDate date;
+    @ManyToOne
+    @JoinColumn(name = "route_id")
+    private Route route;
 }

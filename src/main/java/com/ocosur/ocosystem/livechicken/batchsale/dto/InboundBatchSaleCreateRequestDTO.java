@@ -20,5 +20,5 @@ public class InboundBatchSaleCreateRequestDTO {
     private Long employeeId;
     private BigDecimal saleTotal;
     private LocalDate date;
-
+    private Long routeId;
 }

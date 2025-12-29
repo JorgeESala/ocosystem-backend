@@ -14,7 +14,7 @@ public class InboundBatchSaleMapper {
             return null;
 
         InboundBatchSaleResponseDTO dto = new InboundBatchSaleResponseDTO();
-
+        
         dto.setId(entity.getId());
         dto.setBatchId(entity.getBatch().getId());
         dto.setQuantitySold(entity.getQuantitySold());
@@ -22,6 +22,8 @@ public class InboundBatchSaleMapper {
         dto.setKgSent(entity.getKgSent());
         dto.setSaleTotal(entity.getSaleTotal());
         dto.setDate(entity.getDate());
+        dto.setRouteId(entity.getRoute() != null ? entity.getRoute().getId() : null);
+        dto.setRouteName(entity.getRoute() != null ? entity.getRoute().getName() : null);
 
         if (entity.getEmployee() != null) {
             dto.setEmployeeId(entity.getEmployee().getId());
