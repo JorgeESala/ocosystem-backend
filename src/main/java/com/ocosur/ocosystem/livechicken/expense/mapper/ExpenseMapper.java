@@ -8,7 +8,6 @@ import com.ocosur.ocosystem.livechicken.expense.dto.ExpenseResponseDTO;
 @Component
 public class ExpenseMapper {
     private ExpenseMapper() {
-        // util class
     }
 
     public ExpenseResponseDTO toResponseDTO(LiveChickenExpense entity) {
