@@ -13,7 +13,6 @@ import java.time.format.TextStyle;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -636,7 +635,7 @@ public class ReportService {
                         String metric,
                         boolean compareWithPreviousYear,
                         List<String> categories,
-                        boolean compareSelf) { // 👈 Nuevo parámetro
+                        boolean compareSelf) {
 
                 List<ReportEntryDTO> combinedReports = new ArrayList<>();
 
