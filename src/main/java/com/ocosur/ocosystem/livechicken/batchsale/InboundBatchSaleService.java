@@ -48,7 +48,6 @@ public class InboundBatchSaleService {
         public InboundBatchSaleResponseDTO create(
                         Long batchId,
                         InboundBatchSaleCreateRequestDTO dto) {
-                Route route = null;
                 InboundBatch batch = inboundBatchRepository.findById(batchId)
                                 .orElseThrow(() -> new EntityNotFoundException(
                                                 "InboundBatch not found: " + batchId));
@@ -57,23 +56,21 @@ public class InboundBatchSaleService {
                                 .orElseThrow(() -> new EntityNotFoundException(
                                                 "Employee not found: " + dto.getEmployeeId()));
 
-                if (!dto.getRouteId().equals(0L)) {
-                        route = routeRepository.findById(dto.getRouteId())
+                InboundBatchSale sale = new InboundBatchSale();
+                sale.setBatch(batch);
+                sale.setEmployee(employee);
+                sale.setQuantitySold(dto.getQuantitySold());
+                sale.setKgSold(dto.getKgSold());
+                sale.setKgSent(dto.getKgSent());
+                sale.setSaleTotal(dto.getSaleTotal());
+                sale.setDate(dto.getDate());
+                
+                if (dto.getRouteId() != null) {
+                        Route route = routeRepository.findById(dto.getRouteId())
                                         .orElseThrow(() -> new EntityNotFoundException(
                                                         "Route not found: " + dto.getRouteId()));
+                        sale.setRoute(route);
                 }
-
-                InboundBatchSale sale = InboundBatchSale.builder()
-                                .batch(batch)
-                                .employee(employee)
-                                .quantitySold(dto.getQuantitySold())
-                                .kgSold(dto.getKgSold())
-                                .kgSent(dto.getKgSent())
-                                .saleTotal(dto.getSaleTotal())
-                                .date(dto.getDate())
-                                .route(route)
-                                .build();
-
                 InboundBatchSale saved = inboundBatchSaleRepository.save(sale);
 
                 return InboundBatchSaleMapper.toResponseDTO(saved);
@@ -86,18 +83,11 @@ public class InboundBatchSaleService {
                                 .findById(saleId)
                                 .orElseThrow(() -> new EntityNotFoundException(
                                                 "Sale not found: " + saleId));
-
                 if (dto.getEmployeeId() != null) {
                         Employee employee = employeeRepository.findById(dto.getEmployeeId())
                                         .orElseThrow(() -> new EntityNotFoundException(
                                                         "Employee not found: " + dto.getEmployeeId()));
                         sale.setEmployee(employee);
-                }
-                if (dto.getRouteId() != null) {
-                        Route route = routeRepository.findById(dto.getRouteId())
-                                        .orElseThrow(() -> new EntityNotFoundException(
-                                                        "Route not found: " + dto.getRouteId()));
-                        sale.setRoute(route);
                 }
 
                 sale.setQuantitySold(dto.getQuantitySold());
@@ -105,6 +95,11 @@ public class InboundBatchSaleService {
                 sale.setKgSent(dto.getKgSent());
                 sale.setSaleTotal(dto.getSaleTotal());
                 sale.setDate(dto.getDate());
+                if (dto.getRouteId() == null) {
+                        sale.setRoute(null);
+                } else {
+                        sale.setRoute(routeRepository.getReferenceById(dto.getRouteId()));
+                }
 
                 InboundBatchSale updated = inboundBatchSaleRepository.save(sale);
 
