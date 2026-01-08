@@ -18,6 +18,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.util.StopWatch;
@@ -29,6 +30,7 @@ import com.ocosur.ocosystem.dto.MonthlyCategoryReportDTO;
 import com.ocosur.ocosystem.dto.MonthlyReportDTO;
 import com.ocosur.ocosystem.dto.ProductReportDTO;
 import com.ocosur.ocosystem.dto.ReportEntryDTO;
+import com.ocosur.ocosystem.dto.TimeSeriesPointDTO;
 import com.ocosur.ocosystem.dto.WeeklyReportDTO;
 import com.ocosur.ocosystem.model.Branch;
 import com.ocosur.ocosystem.model.Product;
@@ -135,7 +137,6 @@ public class ReportService {
                 List<Ticket> tickets = ticketRepository.findByBranchIdAndDateGreaterThanEqualAndDateLessThan(branchId,
                                 start, end);
                 List<Sale> sales = tickets.stream().flatMap(t -> t.getSales().stream()).toList();
-                
 
                 // --- Totales ---
                 BigDecimal totalSales = ReportUtils.sumTicketsTotal(tickets);
@@ -168,8 +169,7 @@ public class ReportService {
                                 totalEggsSale,
                                 salesByCategory,
                                 salesByProduct,
-                                quantitiesByProduct
-                        );
+                                quantitiesByProduct);
         }
 
         public WeeklyReportDTO getWeeklyReport(Long branchId, OffsetDateTime date, Boolean includeDays) {
@@ -184,7 +184,7 @@ public class ReportService {
                 // 🧮 3️⃣ Consultar usando >= start y < end
                 List<Ticket> tickets = ticketRepository.findByBranchIdAndDateGreaterThanEqualAndDateLessThan(branchId,
                                 startUtc, endUtc);
-                
+
                 List<Sale> sales = tickets.stream().flatMap(t -> t.getSales().stream()).toList();
 
                 // 📊 4️⃣ Totales principales
@@ -260,9 +260,6 @@ public class ReportService {
                                 .map(Sale::getQuantity)
                                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                
-                
-
                 if (categoryId == 1) {
                         List<Sale> sales = tickets.stream()
                                         .flatMap(t -> t.getSales().stream())
@@ -279,8 +276,6 @@ public class ReportService {
                                 .map(Sale::getSubtotal)
                                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        
-
                 // Ventas por producto
                 Map<String, BigDecimal> salesByCategory = salesInCategory.stream()
                                 .collect(Collectors.groupingBy(
@@ -288,7 +283,6 @@ public class ReportService {
                                                 Collectors.mapping(Sale::getSubtotal, Collectors
                                                                 .reducing(BigDecimal.ZERO, BigDecimal::add))));
 
-                
                 if (includeDays) {
                         OffsetDateTime current = start;
                         while (!current.isAfter(end)) {
@@ -340,18 +334,11 @@ public class ReportService {
                                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
                 // Gastos (solo aplican si la categoría es pollo -> id = 1)
-                
-               
 
                 // Totales
                 BigDecimal totalSales = salesInCategory.stream()
                                 .map(Sale::getSubtotal)
                                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-
-
-
-
 
                 if (categoryId == 1) {
                         List<Sale> sales = tickets.stream()
@@ -469,7 +456,6 @@ public class ReportService {
                 endDate = ReportUtils.getEndOfDay(endDate);
                 // 🔹 1. Consultas a la base de datos
                 List<Ticket> allTickets = ticketRepository.findByBranchIdAndDateBetween(branchId, startDate, endDate);
-                
 
                 sectionWatch.stop();
                 log.info("⏱ DB fetch took: {} ms", sectionWatch.getTotalTimeMillis());
@@ -509,8 +495,6 @@ public class ReportService {
                                         .filter(t -> !t.getDate().isBefore(finalStart)
                                                         && !t.getDate().isAfter(finalEnd))
                                         .toList();
-
-            
 
                         sectionWatch.stop();
                         log.info("⏱ Filtering for {} → {} took: {} ms", finalStart.toLocalDate(),
@@ -573,7 +557,6 @@ public class ReportService {
                 // 1️⃣ Consultar todos los datos del rango total extendido
                 List<Ticket> allTickets = ticketRepository.findByBranchIdAndDateBetween(branchId, startDate,
                                 extendedEnd);
-             
 
                 List<ReportEntryDTO> reports = new ArrayList<>();
 
@@ -591,8 +574,6 @@ public class ReportService {
                                         .filter(t -> !t.getDate().isBefore(finalStart)
                                                         && !t.getDate().isAfter(finalEnd))
                                         .toList();
-
-                        
 
                         // 4️⃣ Calcular totales
                         List<Sale> sales = tickets.stream()
@@ -726,7 +707,11 @@ public class ReportService {
 
                 List<Sale> allSales = saleRepository
                                 .findByTicketBranchIdAndTicketDateBetween(branchId, realStart, realEnd);
-
+                String branchName = "";
+                Optional<Branch> branch = branchRepository.findById(branchId);
+                if(branch.isPresent()){
+                        branchName = branch.get().getName();
+                }
                 // 4️⃣ Normalizar categorías
                 Set<String> lowerCats = (categories == null || categories.isEmpty())
                                 ? Set.of()
@@ -812,6 +797,7 @@ public class ReportService {
                         reports.add(
                                         ReportEntryDTO.builder()
                                                         .branchId(branchId)
+                                                        .branchName(branchName)
                                                         .startDate(segmentStart)
                                                         .endDate(segmentEnd)
                                                         .frequency(frequency)
@@ -856,7 +842,7 @@ public class ReportService {
 
                                 lineKey = switch (frequency) {
                                         case "weekly" -> r.getBranchName() + " - S" + r.getSegmentIndex();
-                                        case "monthly" -> r.getBranchName() +" - S" + r.getSegmentIndex();
+                                        case "monthly" -> r.getBranchName() + " - S" + r.getSegmentIndex();
                                         case "annual" -> r.getStartDate().getMonth().getDisplayName(TextStyle.FULL,
                                                         new Locale("es", "MX"));
                                         default -> "Segmento " + r.getSegmentIndex();
@@ -916,14 +902,15 @@ public class ReportService {
                         if (!includeCategories || categories.isEmpty()) {
                                 BigDecimal total = metric.equals("sales") ? r.getTotalSales() : r.getTotalSold();
                                 // ✅ CAMBIO CLAVE: ASIGNACIÓN DIRECTA (el valor ya viene acumulado)
-                                String keyWithCategory = lineKey + " " + r.getStartDate().getYear() ;
+                                String keyWithCategory = lineKey + " " + r.getStartDate().getYear();
                                 row.put(keyWithCategory, total);
                         } else {
                                 // 🧩 Con categorías → agregar una línea por categoría
                                 for (String cat : categories) {
                                         BigDecimal val = source.getOrDefault(cat.toLowerCase(), BigDecimal.ZERO);
                                         // Adjuntar al nombre de la línea (incluye el año si es comparación anual)
-                                        String keyWithCategory = lineKey + " - " + cat +" " + r.getStartDate().getYear() ;
+                                        String keyWithCategory = lineKey + " - " + cat + " "
+                                                        + r.getStartDate().getYear();
 
                                         // ✅ CAMBIO CLAVE: ASIGNACIÓN DIRECTA (el valor ya viene acumulado)
                                         row.put(keyWithCategory, val);
@@ -942,4 +929,43 @@ public class ReportService {
                                 })
                                 .toList();
         }
+
+        public List<TimeSeriesPointDTO> formatForTimeSeries(
+                        List<ReportEntryDTO> reports,
+                        String metric) {
+                List<TimeSeriesPointDTO> result = new ArrayList<>();
+
+                for (ReportEntryDTO r : reports) {
+
+                        // 🔑 FECHA NORMALIZADA
+                        LocalDate date = r.getStartDate().toLocalDate();
+
+                        // 🔑 NOMBRE DE SERIE
+                        String series = buildSeriesName(r);
+
+                        // 🔑 VALOR SEGÚN MÉTRICA
+                        BigDecimal value = extractMetric(r, metric);
+
+                        result.add(new TimeSeriesPointDTO(date, series, value));
+                }
+
+                return result;
+        }
+
+        private String buildSeriesName(ReportEntryDTO r) {
+                if (r.getYear() != null) {
+                        return r.getBranchName() + " " + r.getYear();
+                }
+                return r.getBranchName();
+        }
+
+        private BigDecimal extractMetric(ReportEntryDTO r, String metric) {
+
+                return switch (metric) {
+                        case "sales" -> r.getTotalSales();
+                        case "quantity" -> r.getTotalSold();
+                        default -> BigDecimal.ZERO;
+                };
+        }
+
 }

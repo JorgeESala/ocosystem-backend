@@ -187,7 +187,6 @@ public class ReportUtils {
                 long blockIndex = daysDiff / 7;
 
                 OffsetDateTime blockStart = startDate.plusDays(blockIndex * 7);
-                System.out.println("Block Start: " + getEndOfDay(blockStart.plusDays(6)));
                 return getEndOfDay(blockStart.plusDays(6));
             case "monthly":
                 OffsetDateTime startMonth = endDate.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS);

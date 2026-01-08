@@ -20,6 +20,7 @@ import com.ocosur.ocosystem.dto.DailyReportDTO;
 import com.ocosur.ocosystem.dto.MonthlyCategoryReportDTO;
 import com.ocosur.ocosystem.dto.MonthlyReportDTO;
 import com.ocosur.ocosystem.dto.ReportEntryDTO;
+import com.ocosur.ocosystem.dto.TimeSeriesPointDTO;
 import com.ocosur.ocosystem.dto.WeeklyReportDTO;
 import com.ocosur.ocosystem.service.ReportService;
 
@@ -106,6 +107,42 @@ public class ReportController {
                     includeCategories, categories, compareSelf);
 
             return ResponseEntity.ok(formatted);
+        } catch (DateTimeParseException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/time-series")
+    public ResponseEntity<?> getReportsTimeSeries(
+            @RequestParam List<Long> branchId,
+            @RequestParam String startDate,
+            @RequestParam String endDate,
+            @RequestParam String metric,
+            @RequestParam String frequency,
+            @RequestParam(required = false) List<String> categories,
+            @RequestParam Boolean compareSelf) {
+        try {
+            OffsetDateTime start = OffsetDateTime.parse(startDate);
+            OffsetDateTime end = OffsetDateTime.parse(endDate);
+            Boolean comparePrevious = false;
+
+            if (frequency.equalsIgnoreCase("weekly_custom") || frequency.equalsIgnoreCase("daily_custom")) {
+                comparePrevious = true;
+            }
+            
+            List<ReportEntryDTO> reports = reportService.getReportsCustom(
+                    branchId,
+                    start,
+                    end,
+                    frequency,
+                    metric,
+                    comparePrevious,
+                    categories,
+                    compareSelf);
+
+            List<TimeSeriesPointDTO> response = reportService.formatForTimeSeries(reports, metric);
+
+            return ResponseEntity.ok(response);
         } catch (DateTimeParseException e) {
             return ResponseEntity.badRequest().build();
         }
