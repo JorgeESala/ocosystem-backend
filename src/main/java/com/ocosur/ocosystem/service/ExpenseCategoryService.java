@@ -6,12 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.ocosur.ocosystem.model.ExpenseCategory;
-import com.ocosur.ocosystem.repository.ExpenseCategoryRepository;
+import com.ocosur.ocosystem.repository.BranchesExpenseCategoryRepository;
 
 @Service
 public class ExpenseCategoryService {
     @Autowired
-    ExpenseCategoryRepository expenseCategoryRepository;
+    BranchesExpenseCategoryRepository expenseCategoryRepository;
 
     public List<ExpenseCategory> getAllCategories() {
         return expenseCategoryRepository.findAll();

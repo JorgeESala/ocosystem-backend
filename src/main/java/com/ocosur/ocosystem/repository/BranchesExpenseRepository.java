@@ -13,7 +13,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.ocosur.ocosystem.model.Expense;
 
-public interface ExpenseRepository extends JpaRepository<Expense, Long> {
+public interface BranchesExpenseRepository extends JpaRepository<Expense, Long> {
 
     List<Expense> findByBranchIdAndDateBetween(
             Long branchId,
@@ -29,7 +29,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
 
     @Query("""
                 SELECT COALESCE(SUM(e.amount), 0)
-                FROM Expense e
+                FROM BranchesExpense e
                 WHERE e.date BETWEEN :start AND :end
                 AND e.branch.id = :branchId
             """)
@@ -40,7 +40,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
 
     @Query("""
             SELECT COALESCE(SUM(e.amount), 0)
-            FROM Expense e
+            FROM BranchesExpense e
             WHERE e.date BETWEEN :start AND :end
             AND e.branch.id IN :branchIds
             """)

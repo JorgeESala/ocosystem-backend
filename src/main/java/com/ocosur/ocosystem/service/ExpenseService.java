@@ -14,18 +14,18 @@ import com.ocosur.ocosystem.model.Branch;
 import com.ocosur.ocosystem.model.Expense;
 import com.ocosur.ocosystem.model.ExpenseCategory;
 import com.ocosur.ocosystem.repository.BranchRepository;
-import com.ocosur.ocosystem.repository.ExpenseCategoryRepository;
-import com.ocosur.ocosystem.repository.ExpenseRepository;
+import com.ocosur.ocosystem.repository.BranchesExpenseCategoryRepository;
+import com.ocosur.ocosystem.repository.BranchesExpenseRepository;
 
-@Service
+@Service("branchExpenseService")
 public class ExpenseService {
 
     @Autowired
-    ExpenseRepository expenseRepository;
+    BranchesExpenseRepository expenseRepository;
     @Autowired
     BranchRepository branchRepository;
     @Autowired
-    ExpenseCategoryRepository categoryRepository;
+    BranchesExpenseCategoryRepository categoryRepository;
 
     public List<Expense> getExpenses() {
         return expenseRepository.findAll();

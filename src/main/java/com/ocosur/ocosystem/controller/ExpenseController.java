@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @CrossOrigin
-@RestController
+@RestController("branchExpenseController")
 @RequestMapping("/api/expenses")
 public class ExpenseController {
     @Autowired

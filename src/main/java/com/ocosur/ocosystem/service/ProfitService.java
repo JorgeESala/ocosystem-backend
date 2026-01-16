@@ -17,7 +17,7 @@ import com.ocosur.ocosystem.model.Batch;
 import com.ocosur.ocosystem.model.BatchSale;
 import com.ocosur.ocosystem.repository.BatchSaleRepository;
 import com.ocosur.ocosystem.repository.BranchRepository;
-import com.ocosur.ocosystem.repository.ExpenseRepository;
+import com.ocosur.ocosystem.repository.BranchesExpenseRepository;
 
 @Service
 public class ProfitService {
@@ -25,11 +25,11 @@ public class ProfitService {
     @Autowired
     private BatchSaleRepository batchSaleRepository;
     @Autowired
-    private ExpenseRepository expenseRepository;
+    private BranchesExpenseRepository expenseRepository;
     @Autowired
     private BranchRepository branchRepository;
 
-    public ProfitService(BatchSaleRepository batchSaleRepository, ExpenseRepository expenseRepository) {
+    public ProfitService(BatchSaleRepository batchSaleRepository, BranchesExpenseRepository expenseRepository) {
         this.batchSaleRepository = batchSaleRepository;
         this.expenseRepository = expenseRepository;
     }

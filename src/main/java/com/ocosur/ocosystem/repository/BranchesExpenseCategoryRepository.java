@@ -4,6 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.ocosur.ocosystem.model.ExpenseCategory;
 
-public interface ExpenseCategoryRepository extends JpaRepository<ExpenseCategory, Long> {
+public interface BranchesExpenseCategoryRepository extends JpaRepository<ExpenseCategory, Long> {
     
 }

@@ -5,18 +5,26 @@ import java.time.LocalDate;
 
 import com.ocosur.ocosystem.livechicken.expense.ExpenseCategoryCode;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-public class ExpenseCreateRequestDTO {
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class ExpenseDetailResponseDTO {
+
+    private Long id;
 
     private ExpenseCategoryCode categoryCode;
+
     private String reason;
     private BigDecimal amount;
     private LocalDate date;
 
-    // Optional payloads
-    private FuelExpenseCreateDTO fuel;
-    private FoodExpenseCreateDTO food;
-    private VehicleExpenseCreateDTO vehicle;
+    private FoodExpenseDTO food;
+    private FuelExpenseDTO fuel;
+    private VehicleExpenseDTO vehicle;
 }

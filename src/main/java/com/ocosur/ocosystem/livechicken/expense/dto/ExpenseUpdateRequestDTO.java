@@ -16,4 +16,9 @@ public class ExpenseUpdateRequestDTO {
     private String reason;
     private BigDecimal amount;
     private LocalDate date;
+
+    // Optional payloads
+    private FuelExpenseUpdateDTO fuel;
+    private FoodExpenseUpdateDTO food;
+    private VehicleExpenseUpdateDTO vehicle;
 }
