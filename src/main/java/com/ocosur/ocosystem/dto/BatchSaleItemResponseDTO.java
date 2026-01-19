@@ -12,5 +12,7 @@ public record BatchSaleItemResponseDTO(
     BigDecimal saleTotal,
     Long employeeId,
     String employeeName,
+    Long clientId,
+    String clientName,
     LocalDate date
 ) {}

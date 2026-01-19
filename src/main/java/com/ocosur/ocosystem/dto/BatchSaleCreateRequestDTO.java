@@ -11,6 +11,7 @@ public class BatchSaleCreateRequestDTO {
 
     private Long batchId;
     private Long employeeId;
+    private Long clientId;
     private BigDecimal quantitySold;
     private BigDecimal kgTotal;
     private BigDecimal saleTotal;

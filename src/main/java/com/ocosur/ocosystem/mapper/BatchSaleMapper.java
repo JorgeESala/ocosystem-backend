@@ -5,6 +5,7 @@ import com.ocosur.ocosystem.dto.BatchSaleCreateRequestDTO;
 import com.ocosur.ocosystem.dto.BatchSaleCreateResponseDTO;
 import com.ocosur.ocosystem.dto.BatchSaleItemResponseDTO;
 import com.ocosur.ocosystem.model.BatchSale;
+import com.ocosur.ocosystem.processed.client.Client;
 
 import org.springframework.stereotype.Component;
 
@@ -38,6 +39,7 @@ public class BatchSaleMapper {
     public BatchSaleItemResponseDTO toItemResponse(BatchSale sale) {
 
         Employee emp = sale.getEmployee();
+        Client client = sale.getClient();
 
         return new BatchSaleItemResponseDTO(
                 sale.getId(),
@@ -48,6 +50,8 @@ public class BatchSaleMapper {
                 sale.getSaleTotal(),
                 emp != null ? emp.getId() : null,
                 emp != null ? emp.getName() : null,
+                client != null ? client.getId() : null,
+                client != null ? client.getName() : null,
                 sale.getDate());
     }
 

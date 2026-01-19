@@ -18,6 +18,8 @@ import com.ocosur.ocosystem.dto.BatchSaleSearchResponseDTO;
 import com.ocosur.ocosystem.dto.BatchSaleUpdateDTO;
 import com.ocosur.ocosystem.model.Batch;
 import com.ocosur.ocosystem.model.BatchSale;
+import com.ocosur.ocosystem.processed.client.Client;
+import com.ocosur.ocosystem.processed.client.ClientService;
 import com.ocosur.ocosystem.service.BatchSaleService;
 import com.ocosur.ocosystem.service.BatchService;
 
@@ -40,6 +42,8 @@ public class BatchSaleController {
     BatchService batchService;
     @Autowired
     EmployeeRepository employeeService;
+    @Autowired
+    ClientService ClientService;
 
     @GetMapping()
     public ResponseEntity<List<BatchSale>> getBatchSales() {
@@ -74,6 +78,13 @@ public class BatchSaleController {
             Employee employee = employeeService.findById(dto.getEmployeeId())
                     .orElseThrow();
             sale.setEmployee(employee);
+        }
+        if (dto.getClientId() != null) {
+            Client client = ClientService.findById(dto.getClientId())
+                    .orElseThrow();
+            sale.setClient(client);
+        } else {
+            sale.setClient(null);
         }
 
         // Aquí sí puedes usar save()
