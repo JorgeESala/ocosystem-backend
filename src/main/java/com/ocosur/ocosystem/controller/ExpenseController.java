@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ocosur.ocosystem.dto.ExpenseDTO;
 import com.ocosur.ocosystem.dto.SearchByBranchDTO;
 import com.ocosur.ocosystem.model.Expense;
+import com.ocosur.ocosystem.security.RequireBusiness;
 import com.ocosur.ocosystem.service.ExpenseService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @CrossOrigin
 @RestController("branchExpenseController")
 @RequestMapping("/api/expenses")
+@RequireBusiness("BRANCHES")
 public class ExpenseController {
     @Autowired
     private ExpenseService expenseService;

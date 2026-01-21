@@ -1,4 +1,8 @@
 package com.ocosur.ocosystem.dto;
 
-public record AuthResponse(String token, Long userId, String email, String name, String role) {
+import com.ocosur.ocosystem.security.dto.UserSessionDTO;
+
+public record AuthResponse(
+        String token,
+        UserSessionDTO user) {
 }

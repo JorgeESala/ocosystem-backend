@@ -22,11 +22,13 @@ import com.ocosur.ocosystem.dto.MonthlyReportDTO;
 import com.ocosur.ocosystem.dto.ReportEntryDTO;
 import com.ocosur.ocosystem.dto.TimeSeriesPointDTO;
 import com.ocosur.ocosystem.dto.WeeklyReportDTO;
+import com.ocosur.ocosystem.security.RequireBusiness;
 import com.ocosur.ocosystem.service.ReportService;
 
 @CrossOrigin
 @RestController
 @RequestMapping("/api/reports")
+@RequireBusiness("BRANCHES")
 public class ReportController {
 
     @Autowired

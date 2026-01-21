@@ -12,10 +12,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ocosur.ocosystem.dto.ProfitReport;
+import com.ocosur.ocosystem.security.RequireBusiness;
 import com.ocosur.ocosystem.service.ProfitService;
 @RestController
 @CrossOrigin
 @RequestMapping("/api/reports")
+@RequireBusiness("BRANCHES")
 public class ProfitController {
 
     private final ProfitService profitService;

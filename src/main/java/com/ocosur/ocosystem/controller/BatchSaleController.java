@@ -20,6 +20,7 @@ import com.ocosur.ocosystem.model.Batch;
 import com.ocosur.ocosystem.model.BatchSale;
 import com.ocosur.ocosystem.processed.client.Client;
 import com.ocosur.ocosystem.processed.client.ClientService;
+import com.ocosur.ocosystem.security.RequireBusiness;
 import com.ocosur.ocosystem.service.BatchSaleService;
 import com.ocosur.ocosystem.service.BatchService;
 
@@ -34,6 +35,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 @RestController
 @CrossOrigin
 @RequestMapping("/api/batchSales")
+@RequireBusiness("BRANCHES")
 public class BatchSaleController {
 
     @Autowired

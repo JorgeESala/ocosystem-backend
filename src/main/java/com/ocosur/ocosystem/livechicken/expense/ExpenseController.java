@@ -18,9 +18,10 @@ import com.ocosur.ocosystem.livechicken.expense.dto.ExpenseCreateRequestDTO;
 import com.ocosur.ocosystem.livechicken.expense.dto.ExpenseDetailResponseDTO;
 import com.ocosur.ocosystem.livechicken.expense.dto.ExpenseResponseDTO;
 import com.ocosur.ocosystem.livechicken.expense.dto.ExpenseUpdateRequestDTO;
+import com.ocosur.ocosystem.security.RequireBusiness;
 
 import lombok.RequiredArgsConstructor;
-
+@RequireBusiness("LIVE_CHICKEN")
 @RestController("liveChickenExpenseController")
 @RequestMapping("/api/live-chicken/expenses")
 @RequiredArgsConstructor

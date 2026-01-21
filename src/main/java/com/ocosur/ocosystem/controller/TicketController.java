@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ocosur.ocosystem.model.Ticket;
+import com.ocosur.ocosystem.security.RequireBusiness;
 import com.ocosur.ocosystem.service.TicketService;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @CrossOrigin
 @RestController
 @RequestMapping("/api/tickets")
+@RequireBusiness("BRANCHES")
 public class TicketController {
     
     @Autowired

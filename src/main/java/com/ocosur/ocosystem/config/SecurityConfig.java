@@ -19,27 +19,26 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.ocosur.ocosystem.security.EmployeeUserDetailsService;
 import com.ocosur.ocosystem.security.JwtAuthEntryPoint;
 import com.ocosur.ocosystem.security.JwtAuthenticationFilter;
+import com.ocosur.ocosystem.service.CustomAccessDeniedHandler;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.beans.factory.annotation.Value;
 import java.util.Arrays;
 import java.util.List;
 
 @Configuration
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final EmployeeUserDetailsService userDetailsService;
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final JwtAuthEntryPoint jwtAuthEntryPoint;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Value("${cors.allowed-origins}")
     private String allowedOrigin;
-
-    public SecurityConfig(EmployeeUserDetailsService userDetailsService, JwtAuthenticationFilter jwtAuthFilter,
-            JwtAuthEntryPoint jwtAuthEntryPoint) {
-        this.userDetailsService = userDetailsService;
-        this.jwtAuthFilter = jwtAuthFilter;
-        this.jwtAuthEntryPoint = jwtAuthEntryPoint;
-    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -80,18 +79,31 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
+
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(jwtAuthEntryPoint))
+                        // 🔐 401 → no autenticado
+                        .authenticationEntryPoint(jwtAuthEntryPoint)
+
+                        // ⛔ 403 → autenticado pero sin permisos
+                        .accessDeniedHandler(customAccessDeniedHandler))
+
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/actuator/**").permitAll()
                         .anyRequest().authenticated())
+
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .authenticationProvider(daoAuthProvider())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+                .addFilterBefore(
+                        jwtAuthFilter,
+                        UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
 }

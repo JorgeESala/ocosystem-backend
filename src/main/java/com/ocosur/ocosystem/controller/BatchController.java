@@ -19,11 +19,13 @@ import com.ocosur.ocosystem.dto.BatchRequestDTO;
 import com.ocosur.ocosystem.dto.BatchSearchRequestDTO;
 import com.ocosur.ocosystem.dto.BatchUpdateDTO;
 import com.ocosur.ocosystem.model.Batch;
+import com.ocosur.ocosystem.security.RequireBusiness;
 import com.ocosur.ocosystem.service.BatchService;
 
 @RestController
 @CrossOrigin
 @RequestMapping("/api/batches")
+@RequireBusiness("BRANCHES")
 public class BatchController {
     @Autowired
     BatchService batchService;

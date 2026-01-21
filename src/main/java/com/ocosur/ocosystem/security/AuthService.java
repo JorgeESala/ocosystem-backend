@@ -4,6 +4,11 @@ import com.ocosur.ocosystem.core.employee.model.Employee;
 import com.ocosur.ocosystem.core.employee.repository.EmployeeRepository;
 import com.ocosur.ocosystem.dto.AuthResponse;
 import com.ocosur.ocosystem.dto.RegisterRequest;
+import com.ocosur.ocosystem.security.dto.UserSessionDTO;
+import com.ocosur.ocosystem.security.model.AuthenticatedUser;
+
+import java.util.List;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -12,41 +17,62 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthService {
 
-    private final EmployeeRepository repo;
-    private final PasswordEncoder encoder;
-    private final JwtService jwtService;
-    private final AuthenticationManager authManager;
+        private final EmployeeRepository repo;
+        private final PasswordEncoder encoder;
+        private final JwtService jwtService;
+        private final AuthenticationManager authManager;
 
-    public AuthService(EmployeeRepository repo, PasswordEncoder encoder, JwtService jwtService,
-            AuthenticationManager authManager) {
-        this.repo = repo;
-        this.encoder = encoder;
-        this.jwtService = jwtService;
-        this.authManager = authManager;
-    }
-
-    public AuthResponse register(RegisterRequest req) {
-        if (repo.existsByEmail(req.email().toLowerCase().trim())) {
-            throw new IllegalArgumentException("Email already in use");
+        public AuthService(EmployeeRepository repo, PasswordEncoder encoder, JwtService jwtService,
+                        AuthenticationManager authManager) {
+                this.repo = repo;
+                this.encoder = encoder;
+                this.jwtService = jwtService;
+                this.authManager = authManager;
         }
 
-        Employee e = Employee.builder()
-                .name(req.name())
-                .email(req.email().toLowerCase().trim())
-                .passwordHash(encoder.encode(req.password()))
-                .role("USER")
-                .active(true)
-                .build();
+        public AuthResponse register(RegisterRequest req) {
 
-        e = repo.save(e);
-        String token = jwtService.generateToken(e.getEmail(), e.getRole());
-        return new AuthResponse(token, e.getId(), e.getEmail(), e.getName(), e.getRole());
-    }
+                if (repo.existsByEmail(req.email().toLowerCase().trim())) {
+                        throw new IllegalArgumentException("Email already in use");
+                }
 
-    public AuthResponse login(String email, String password) {
-        authManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
-        Employee e = repo.findByEmail(email).orElseThrow();
-        String token = jwtService.generateToken(e.getEmail(), e.getRole());
-        return new AuthResponse(token, e.getId(), e.getEmail(), e.getName(), e.getRole());
-    }
+                Employee e = Employee.builder()
+                                .name(req.name())
+                                .email(req.email().toLowerCase().trim())
+                                .passwordHash(encoder.encode(req.password()))
+                                .role("USER")
+                                .active(true)
+                                .build();
+
+                e = repo.save(e);
+
+                String token = jwtService.generateToken(
+                                e.getEmail(),
+                                e.getRole());
+
+                UserSessionDTO userDto = UserSessionDTO.builder()
+                                .id(e.getId())
+                                .email(e.getEmail())
+                                .name(e.getName())
+                                .allowedBusinesses(List.of())
+                                .build();
+
+                return new AuthResponse(token, userDto);
+        }
+
+        public AuthenticatedUser login(String email, String password) {
+
+                authManager.authenticate(
+                                new UsernamePasswordAuthenticationToken(email, password));
+
+                Employee user = repo.findByEmail(email)
+                                .orElseThrow();
+
+                String token = jwtService.generateToken(
+                                user.getEmail(),
+                                user.getRole());
+
+                return new AuthenticatedUser(token, user);
+        }
+
 }
