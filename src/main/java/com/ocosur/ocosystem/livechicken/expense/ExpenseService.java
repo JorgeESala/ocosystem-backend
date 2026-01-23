@@ -155,10 +155,16 @@ public class ExpenseService {
                                 .toList();
         }
 
+        @Transactional
         public List<ExpenseResponseDTO> getBetween(
                         LocalDate start,
                         LocalDate end) {
-                return expenseRepository.findFlatBetween(start, end)
+                if (start.isAfter(end)) {
+                        throw new IllegalArgumentException("Invalid date range");
+                }
+
+                return expenseRepository
+                                .findAllByDateBetweenOrderByDateDesc(start, end)
                                 .stream()
                                 .map(expenseMapper::toResponse)
                                 .toList();

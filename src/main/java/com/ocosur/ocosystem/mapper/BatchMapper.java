@@ -5,6 +5,8 @@ import org.springframework.stereotype.Component;
 import com.ocosur.ocosystem.dto.BatchCreateRequestDTO;
 import com.ocosur.ocosystem.dto.BatchCreateResponseDTO;
 import com.ocosur.ocosystem.dto.BatchItemResponseDTO;
+import com.ocosur.ocosystem.livechicken.inboundbatch.InboundBatch;
+import com.ocosur.ocosystem.livechicken.inboundbatch.dto.InboundBatchResponseDTO;
 import com.ocosur.ocosystem.model.Batch;
 
 @Component
@@ -45,5 +47,19 @@ public class BatchMapper {
                 batch.getDate(),
                 batch.getProvider(),
                 batch.getChickenQuantity());
+    }
+    public InboundBatchResponseDTO toResponseDTO(InboundBatch batch) {
+        return InboundBatchResponseDTO.builder()
+                .id(batch.getId())
+                .supplierId(batch.getSupplier().getId())
+                .supplierName(batch.getSupplier().getName())
+                .date(batch.getDate())
+                .realWeight(batch.getRealWeight())
+                .declaredWeight(batch.getDeclaredWeight())
+                .chickenQuantity(batch.getChickenQuantity())
+                .pricePerKg(batch.getPricePerKg())
+                .totalPaid(batch.getTotalPaid())
+                .avgWeight(batch.getAvgWeight())
+                .build();
     }
 }

@@ -92,4 +92,7 @@ public interface LiveChickenExpenseRepository extends JpaRepository<Expense, Lon
 
     Page<Expense> findAllByOrderByDateDesc(Pageable pageable);
 
+    List<Expense> findAllByDateBetweenOrderByDateDesc(
+            LocalDate start,
+            LocalDate end);
 }

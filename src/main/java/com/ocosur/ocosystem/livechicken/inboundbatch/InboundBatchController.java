@@ -1,5 +1,6 @@
 package com.ocosur.ocosystem.livechicken.inboundbatch;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -23,9 +24,16 @@ import lombok.AllArgsConstructor;
 @RestController
 @RequestMapping("/api/live-chicken/inbound-batches")
 @AllArgsConstructor
-public class InbountBatchController {
+public class InboundBatchController {
 
     private final InboundBatchService inboundBatchService;
+
+    @GetMapping
+    public List<InboundBatchResponseDTO> getInboundBatches(
+            @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate) {
+        return inboundBatchService.getByDateRange(startDate, endDate);
+    }
 
     @GetMapping("/latest")
     public List<InboundBatchResponseDTO> getLatest(
