@@ -32,13 +32,15 @@ public class AccountsPayableReadRepository {
                                            debtor_name,
                                            creditor_id,
                                            creditor_name,
+                                           solicitor_id,
+                                           solicitor_name,
                                            total_amount,
                                            balance,
-                                           created_at
-                                    FROM v_accounts_payable_open
+                                           date
+                                    FROM live_chicken.v_accounts_payable_open
                                     WHERE (:debtorId IS NULL OR debtor_id = :debtorId)
                                       AND (:creditorId IS NULL OR creditor_id = :creditorId)
-                                    ORDER BY created_at
+                                    ORDER BY date DESC
                                 """;
 
                 MapSqlParameterSource params = new MapSqlParameterSource()
@@ -51,9 +53,11 @@ public class AccountsPayableReadRepository {
                                 rs.getString("debtor_name"),
                                 rs.getLong("creditor_id"),
                                 rs.getString("creditor_name"),
+                                rs.getLong("solicitor_id"),
+                                rs.getString("solicitor_name"),
                                 rs.getBigDecimal("total_amount"),
                                 rs.getBigDecimal("balance"),
-                                rs.getTimestamp("created_at").toLocalDateTime()));
+                                rs.getDate("date").toLocalDate()));
 
         }
 
@@ -68,7 +72,7 @@ public class AccountsPayableReadRepository {
                                            created_at,
                                            compensation_folio,
                                            note
-                                    FROM v_accounts_payable_history
+                                    FROM live_chicken.v_accounts_payable_history
                                     WHERE accounts_payable_id = ?
                                     ORDER BY created_at
                                 """;
@@ -93,7 +97,7 @@ public class AccountsPayableReadRepository {
                                            creditor_id,
                                            balance,
                                            aging_bucket
-                                    FROM v_accounts_payable_aging
+                                    FROM live_chicken.v_accounts_payable_aging
                                     WHERE (:debtorId IS NULL OR debtor_id = :debtorId)
                                       AND (:creditorId IS NULL OR creditor_id = :creditorId)
                                 """;
@@ -128,7 +132,7 @@ public class AccountsPayableReadRepository {
                                         balance_after,
                                         folio,
                                         note
-                                    FROM v_entity_account_statement
+                                    FROM live_chicken.v_entity_account_statement
                                     WHERE (:debtorId IS NULL OR debtor_entity_id = :debtorId)
                                       AND (:creditorId IS NULL OR creditor_entity_id = :creditorId)
                                       AND (:from IS NULL OR movement_date >= :from)

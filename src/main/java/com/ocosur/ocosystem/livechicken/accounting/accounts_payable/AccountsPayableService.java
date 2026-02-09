@@ -1,16 +1,24 @@
 package com.ocosur.ocosystem.livechicken.accounting.accounts_payable;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
 
 import com.ocosur.ocosystem.livechicken.accounting.accounting_entity.AccountingEntity;
+import com.ocosur.ocosystem.livechicken.accounting.accounting_entity.AccountingEntityRepository;
+import com.ocosur.ocosystem.livechicken.accounting.accounting_entity.AccountingEntityService;
+import com.ocosur.ocosystem.livechicken.accounting.accounts_payable.dto.CreateAccountsPayableRequestDTO;
 import com.ocosur.ocosystem.livechicken.accounting.common.AccountsPayableSourceType;
+import com.ocosur.ocosystem.livechicken.accounting.credit_solicitor.CreditSolicitor;
+import com.ocosur.ocosystem.livechicken.accounting.credit_solicitor.CreditSolicitorRepository;
+import com.ocosur.ocosystem.livechicken.accounting.credit_solicitor.CreditSolicitorService;
 import com.ocosur.ocosystem.livechicken.accounting.payment.Payment;
 import com.ocosur.ocosystem.livechicken.accounting.payment_application.PaymentApplicationService;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -19,25 +27,33 @@ public class AccountsPayableService {
 
         private final AccountsPayableRepository accountsPayableRepository;
         private final PaymentApplicationService paymentApplicationService;
+        private final AccountingEntityService accountingEntityService;
+        private final CreditSolicitorService creditSolicitorService;
 
         // ------------------------------------------------------------------
         // Creation
         // ------------------------------------------------------------------
 
         @Transactional
-        public AccountsPayable createDebt(
-                        AccountingEntity creditor,
-                        AccountingEntity debtor,
-                        BigDecimal amount,
-                        AccountsPayableSourceType sourceType,
-                        Long sourceId,
-                        String note) {
+        public AccountsPayable createDebt(CreateAccountsPayableRequestDTO request) {
+                AccountingEntity creditor = accountingEntityService.getById
+                (request.getCreditorEntityId());
+                AccountingEntity debtor = accountingEntityService.getById
+                (request.getDebtorEntityId());
+
+                CreditSolicitor solicitor = creditSolicitorService.getById(request.getSolicitorId());
+
                 AccountsPayable ap = AccountsPayable.create(
-                                creditor,
-                                debtor,
-                                amount,
-                                sourceType,
-                                sourceId);
+                        creditor,
+                        debtor,
+                        request.getAmount(),
+                        request.getSourceType(),
+                        request.getSourceId(),
+                        solicitor,
+                        request.getNotes(),
+                        request.getDate()
+                        
+                );
 
                 return accountsPayableRepository.save(ap);
         }

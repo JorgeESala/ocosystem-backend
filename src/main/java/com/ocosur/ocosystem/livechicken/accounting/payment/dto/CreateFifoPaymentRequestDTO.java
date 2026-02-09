@@ -8,8 +8,8 @@ import java.time.LocalDate;
 import com.ocosur.ocosystem.livechicken.accounting.payment.PaymentMethod;
 
 @Getter
-public class CreatePaymentRequestDTO {
-    private Long accountsPaymentId;
+public class CreateFifoPaymentRequestDTO {
+
     // payer (branch)
     private Long payerId;
 
@@ -21,6 +21,4 @@ public class CreatePaymentRequestDTO {
     private PaymentMethod paymentMethod;
     private String folio;
     private String notes;
-    private Long driverId;
-    private Long routeId;
 }

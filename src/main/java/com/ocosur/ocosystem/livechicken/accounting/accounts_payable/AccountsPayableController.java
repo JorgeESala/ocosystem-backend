@@ -59,21 +59,8 @@ public class AccountsPayableController {
         public AccountsPayableResponseDTO create(
                         @RequestBody CreateAccountsPayableRequestDTO request) {
 
-                AccountingEntity creditor = accountingEntityService.getByTypeAndEntityId(
-                                request.getCreditorType(),
-                                request.getCreditorEntityId());
-
-                AccountingEntity debtor = accountingEntityService.getByTypeAndEntityId(
-                                request.getDebtorType(),
-                                request.getDebtorEntityId());
 
                 return AccountsPayableResponseDTO.from(
-                                accountsPayableService.createDebt(
-                                                creditor,
-                                                debtor,
-                                                request.getAmount(),
-                                                request.getSourceType(),
-                                                request.getSourceId(),
-                                                request.getNotes()));
+                                accountsPayableService.createDebt(request));
         }
 }

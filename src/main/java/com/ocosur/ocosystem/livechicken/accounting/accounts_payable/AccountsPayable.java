@@ -6,11 +6,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.ocosur.ocosystem.livechicken.accounting.accounting_entity.AccountingEntity;
 import com.ocosur.ocosystem.livechicken.accounting.accounts_payable_movement.AccountsPayableMovement;
 import com.ocosur.ocosystem.livechicken.accounting.common.AccountsPayableSourceType;
+import com.ocosur.ocosystem.livechicken.accounting.credit_solicitor.CreditSolicitor;
 
 @Entity
 @Table(schema = "live_chicken", indexes = {
@@ -37,6 +39,9 @@ public class AccountsPayable {
     @JoinColumn(name = "debtor_entity_id", nullable = false)
     private AccountingEntity debtor;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "credit_solicitor_id", nullable = true)
+    private CreditSolicitor creditSolicitor;
     // -----------------------
     // Source document
     // -----------------------
@@ -48,6 +53,12 @@ public class AccountsPayable {
     @Column(name = "source_id", nullable = true)
     private Long sourceId;
 
+    // -----------------------
+    // Optional information
+    // -----------------------
+
+    @Column(name = "note", nullable = true)
+    private String note;
     // -----------------------
     // Amounts
     // -----------------------
@@ -65,6 +76,8 @@ public class AccountsPayable {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "date", nullable = false)
+    private LocalDate date;
     // -----------------------
     // JPA lifecycle
     // -----------------------
@@ -83,7 +96,10 @@ public class AccountsPayable {
             AccountingEntity debtor,
             BigDecimal amount,
             AccountsPayableSourceType sourceType,
-            Long sourceId) {
+            Long sourceId,
+            CreditSolicitor creditSolicitor,
+            String note,
+            LocalDate date) {
         AccountsPayable ap = new AccountsPayable();
         ap.creditor = creditor;
         ap.debtor = debtor;
@@ -91,6 +107,9 @@ public class AccountsPayable {
         ap.balance = amount;
         ap.sourceType = sourceType;
         ap.sourceId = sourceId;
+        ap.creditSolicitor = creditSolicitor;
+        ap.note = note;
+        ap.date = date;
         return ap;
     }
 

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.ocosur.ocosystem.livechicken.route.dto.RouteCreateRequestDTO;
 import com.ocosur.ocosystem.livechicken.route.dto.RouteResponseDTO;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class RouteService {
     private final RouteRepository routeRepository;
+
     public List<RouteResponseDTO> getAllRoutes() {
         List<Route> routes = routeRepository.findAll();
         return routes.stream()
@@ -24,6 +26,7 @@ public class RouteService {
                         .build())
                 .toList();
     }
+
     public RouteResponseDTO createRoute(RouteCreateRequestDTO dto) {
         Route route = new Route();
         route.setName(dto.getName());
@@ -32,5 +35,10 @@ public class RouteService {
                 .id(savedRoute.getId())
                 .name(savedRoute.getName())
                 .build();
+    }
+
+    public Route getById(Long routeId) {
+        return routeRepository.findById(routeId).orElseThrow(() -> new EntityNotFoundException(
+                "Ruta con el id " + routeId + " no encontrada"));
     }
 }

@@ -1,6 +1,7 @@
 package com.ocosur.ocosystem.core.employee.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -10,6 +11,7 @@ import com.ocosur.ocosystem.core.employee.mapper.EmployeeMapper;
 import com.ocosur.ocosystem.core.employee.model.Employee;
 import com.ocosur.ocosystem.core.employee.repository.EmployeeRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 
 @Service
@@ -25,7 +27,7 @@ public class EmployeeService {
 
     public List<EmployeeResponseDTO> getByPosition(JobPosition position) {
         List<Employee> employees = employeeRepository.findByPosition(position);
-        
+
         return employees.stream()
                 .map(employeeMapper::toResponse)
                 .toList();
@@ -43,6 +45,12 @@ public class EmployeeService {
         return employees.stream()
                 .map(employeeMapper::toResponse)
                 .toList();
+    }
+
+    public Employee getById(Long employeeId) {
+        return employeeRepository.findById(employeeId).orElseThrow(() -> new EntityNotFoundException(
+            "Empleado con el id " + employeeId + " no encontrado"
+        ));
     }
 
 }

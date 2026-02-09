@@ -1,16 +1,17 @@
 package com.ocosur.ocosystem.livechicken.accounting.accounts_payable.dto;
 
-
 import lombok.Getter;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
+import com.ocosur.ocosystem.livechicken.accounting.accounts_payable.Solicitor;
 import com.ocosur.ocosystem.livechicken.accounting.common.AccountingEntityType;
 import com.ocosur.ocosystem.livechicken.accounting.common.AccountsPayableSourceType;
 
 @Getter
 public class CreateAccountsPayableRequestDTO {
-
+    
     // creditor
     private AccountingEntityType creditorType;
     private Long creditorEntityId;
@@ -25,6 +26,10 @@ public class CreateAccountsPayableRequestDTO {
     // optional source
     private AccountsPayableSourceType sourceType;
     private Long sourceId;
+    
+    private Long solicitorId;
 
     private String notes;
+
+    private LocalDate date;
 }

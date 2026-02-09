@@ -4,9 +4,10 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import com.ocosur.ocosystem.livechicken.accounting.accounts_payable.AccountsPayable;
+import com.ocosur.ocosystem.livechicken.accounting.accounts_payable.Solicitor;
 import com.ocosur.ocosystem.livechicken.accounting.common.AccountsPayableSourceType;
 
 @Getter
@@ -24,7 +25,10 @@ public class AccountsPayableResponseDTO {
     private AccountsPayableSourceType sourceType;
     private Long sourceId;
 
-    private LocalDateTime createdAt;
+    private Long creditSolicitorid;
+    private String creditSolicitorName;
+
+    private LocalDate date;
 
     public static AccountsPayableResponseDTO from(AccountsPayable ap) {
         return AccountsPayableResponseDTO.builder()
@@ -35,7 +39,9 @@ public class AccountsPayableResponseDTO {
                 .balance(ap.getBalance())
                 .sourceType(ap.getSourceType())
                 .sourceId(ap.getSourceId())
-                .createdAt(ap.getCreatedAt())
+                .creditSolicitorid(ap.getCreditSolicitor().getId())
+                .creditSolicitorName(ap.getCreditSolicitor().getName())
+                .date(ap.getDate())
                 .build();
     }
 }
