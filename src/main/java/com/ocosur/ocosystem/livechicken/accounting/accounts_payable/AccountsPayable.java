@@ -42,6 +42,7 @@ public class AccountsPayable {
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "credit_solicitor_id", nullable = true)
     private CreditSolicitor creditSolicitor;
+    
     // -----------------------
     // Source document
     // -----------------------

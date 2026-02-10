@@ -7,7 +7,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import com.ocosur.ocosystem.livechicken.accounting.accounts_payable.AccountsPayable;
-import com.ocosur.ocosystem.livechicken.accounting.accounts_payable.Solicitor;
 import com.ocosur.ocosystem.livechicken.accounting.common.AccountsPayableSourceType;
 
 @Getter
@@ -39,8 +38,10 @@ public class AccountsPayableResponseDTO {
                 .balance(ap.getBalance())
                 .sourceType(ap.getSourceType())
                 .sourceId(ap.getSourceId())
-                .creditSolicitorid(ap.getCreditSolicitor().getId())
-                .creditSolicitorName(ap.getCreditSolicitor().getName())
+                .creditSolicitorid(
+                        ap.getCreditSolicitor() != null ? ap.getCreditSolicitor().getId() : null)
+                .creditSolicitorName(
+                        ap.getCreditSolicitor() != null ? ap.getCreditSolicitor().getName() : null)
                 .date(ap.getDate())
                 .build();
     }

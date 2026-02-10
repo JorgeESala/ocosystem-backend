@@ -108,7 +108,7 @@ public class AccountingEntityService {
         }
 
         public List<AccountingEntityResponseDTO> getAll() {
-                return repository.findAll().stream()
+                return repository.findAllByOrderByEntityTypeDesc().stream()
                                 .map(entity -> {
                                         AccountingEntityResponseDTO dto = new AccountingEntityResponseDTO();
                                         dto.setId(entity.getId());

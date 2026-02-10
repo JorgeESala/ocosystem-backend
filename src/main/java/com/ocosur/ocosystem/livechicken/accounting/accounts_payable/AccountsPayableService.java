@@ -1,24 +1,19 @@
 package com.ocosur.ocosystem.livechicken.accounting.accounts_payable;
 
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
 
 import com.ocosur.ocosystem.livechicken.accounting.accounting_entity.AccountingEntity;
-import com.ocosur.ocosystem.livechicken.accounting.accounting_entity.AccountingEntityRepository;
 import com.ocosur.ocosystem.livechicken.accounting.accounting_entity.AccountingEntityService;
 import com.ocosur.ocosystem.livechicken.accounting.accounts_payable.dto.CreateAccountsPayableRequestDTO;
-import com.ocosur.ocosystem.livechicken.accounting.common.AccountsPayableSourceType;
 import com.ocosur.ocosystem.livechicken.accounting.credit_solicitor.CreditSolicitor;
-import com.ocosur.ocosystem.livechicken.accounting.credit_solicitor.CreditSolicitorRepository;
 import com.ocosur.ocosystem.livechicken.accounting.credit_solicitor.CreditSolicitorService;
 import com.ocosur.ocosystem.livechicken.accounting.payment.Payment;
 import com.ocosur.ocosystem.livechicken.accounting.payment_application.PaymentApplicationService;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -41,7 +36,9 @@ public class AccountsPayableService {
                 AccountingEntity debtor = accountingEntityService.getById
                 (request.getDebtorEntityId());
 
-                CreditSolicitor solicitor = creditSolicitorService.getById(request.getSolicitorId());
+                CreditSolicitor solicitor = request.getSolicitorId() == null ?
+                null : 
+                creditSolicitorService.getById(request.getSolicitorId());
 
                 AccountsPayable ap = AccountsPayable.create(
                         creditor,

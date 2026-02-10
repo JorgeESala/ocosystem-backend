@@ -5,7 +5,6 @@ import lombok.Getter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import com.ocosur.ocosystem.livechicken.accounting.accounts_payable.Solicitor;
 import com.ocosur.ocosystem.livechicken.accounting.common.AccountingEntityType;
 import com.ocosur.ocosystem.livechicken.accounting.common.AccountsPayableSourceType;
 
