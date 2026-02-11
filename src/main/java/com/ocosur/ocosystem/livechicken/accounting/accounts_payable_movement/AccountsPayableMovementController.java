@@ -4,18 +4,17 @@ import org.springframework.web.bind.annotation.*;
 
 import com.ocosur.ocosystem.livechicken.accounting.accounts_payable_movement.dto.AccountsPayableMovementResponseDTO;
 
+import lombok.RequiredArgsConstructor;
+
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/accounting/accounts-payable-movements")
+@RequiredArgsConstructor
 public class AccountsPayableMovementController {
 
     private final AccountsPayableMovementService movementService;
 
-    public AccountsPayableMovementController(
-            AccountsPayableMovementService movementService) {
-        this.movementService = movementService;
-    }
 
     // --------------------------------------------------
     // Get movements for a specific accounts payable
