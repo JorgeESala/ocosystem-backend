@@ -42,7 +42,7 @@ public class AccountsPayable {
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "credit_solicitor_id", nullable = true)
     private CreditSolicitor creditSolicitor;
-    
+
     // -----------------------
     // Source document
     // -----------------------
@@ -136,18 +136,6 @@ public class AccountsPayable {
             throw new IllegalArgumentException("Movement does not belong to this debt");
         }
 
-        if (movement.getBalanceBefore().compareTo(this.balance) != 0) {
-            throw new IllegalStateException("Balance out of sync");
-        }
-
-        switch (movement.getMovementType()) {
-            case PAYMENT, COMPENSATION -> {
-                this.balance = movement.getBalanceAfter();
-            }
-            case ADJUSTMENT -> {
-                this.balance = movement.getBalanceAfter();
-            }
-        }
     }
 
     public boolean isPaid() {

@@ -24,9 +24,6 @@ public class AccountsPayableMovementController {
     public List<AccountsPayableMovementResponseDTO> getByAccountsPayable(
             @PathVariable Long accountsPayableId) {
         return movementService
-                .findByAccountsPayable(accountsPayableId)
-                .stream()
-                .map(AccountsPayableMovementResponseDTO::from)
-                .toList();
+                .findByAccountPayable(accountsPayableId);
     }
 }

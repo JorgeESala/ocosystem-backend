@@ -9,12 +9,14 @@ public interface AccountsPayableMovementRepository
         extends JpaRepository<AccountsPayableMovement, Long> {
 
     @Query("""
-        SELECT m
-        FROM AccountsPayableMovement m
-        WHERE m.accountsPayable.id = :accountsPayableId
-        ORDER BY m.createdAt ASC
-    """)
+                SELECT m
+                FROM AccountsPayableMovement m
+                WHERE m.accountsPayable.id = :accountsPayableId
+                ORDER BY m.createdAt ASC
+            """)
     List<AccountsPayableMovement> findByAccountsPayableIdOrderByCreatedAtAsc(
-            Long accountsPayableId
-    );
+            Long accountsPayableId);
+
+    List<AccountsPayableMovement> findByAccountsPayable_IdOrderByMovementDateAscCreatedAtAsc(Long id);
+
 }

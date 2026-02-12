@@ -74,11 +74,6 @@ public class AccountsPayableMovement {
     @Column(name = "amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal amount;
 
-    @Column(name = "balance_before", nullable = false, precision = 15, scale = 2)
-    private BigDecimal balanceBefore;
-
-    @Column(name = "balance_after", nullable = false, precision = 15, scale = 2)
-    private BigDecimal balanceAfter;
 
     // -----------------------
     // Metadata
@@ -115,8 +110,6 @@ public class AccountsPayableMovement {
         m.movementType = AccountsPayableMovementType.PAYMENT;
         m.amount = amount;
         m.movementDate = movementDate;
-        m.balanceBefore = ap.getBalance();
-        m.balanceAfter = ap.getBalance().subtract(amount);
         m.note = note;
         return m;
     }
@@ -133,8 +126,6 @@ public class AccountsPayableMovement {
         m.movementType = AccountsPayableMovementType.ADJUSTMENT;
         m.amount = amount;
         m.movementDate = movementDate;
-        m.balanceBefore = ap.getBalance();
-        m.balanceAfter = ap.getBalance().add(amount);
         m.note = note;
         return m;
     }
@@ -151,8 +142,6 @@ public class AccountsPayableMovement {
         m.movementType = AccountsPayableMovementType.COMPENSATION;
         m.amount = amount;
         m.movementDate = compensationPayment.getDate();
-        m.balanceBefore = ap.getBalance();
-        m.balanceAfter = ap.getBalance().subtract(amount);
         m.compensationPayment = compensationPayment;
         m.note = note;
 
